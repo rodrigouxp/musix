@@ -44,3 +44,8 @@ nohup.out
 *.njsproj
 *.sln
 *.sw?
+
+# clone local do cliente (docker build) e seus lixos
+client-src/.git
+client-src/node_modules
+client-src/dist

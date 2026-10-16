@@ -1,150 +1,65 @@
 # syntax=docker/dockerfile:1.6
 #
-# Multi-stage Swing Music image.
+# Imagem do player (fork do Swing Music) para o homelab.
+# Contexto de build: raiz deste repo + o repo do cliente clonado em ./client-src
+#   git clone https://github.com/rodrigouxp/swingmusic-webclient client-src
+#   docker build -t swingmusic-dev .
 #
-# Stage 1 (compiler) compiles premium Python modules into native extensions.
-# Cached when src/swingmusic/premium/ is unchanged — non-premium edits skip
-# the slow Nuitka pass entirely.
-#
-# Stage 2 (builder) assembles the full source tree (with compiled premium
-# artifacts swapped in for their .py originals) and produces a wheel.
-#
-# Stage 3 (runtime) is a slim image carrying only ffmpeg/libev and the
-# installed wheel. Premium .py source never reaches it.
+# A versao vem de version.txt (fonte unica): serve de metadado do pacote e
+# tambem vai para <cliente>/version.txt. Isso e OBRIGATORIO: a cada boot o
+# servidor compara as duas versoes e, se divergirem, APAGA a pasta do cliente
+# e baixa o cliente do upstream (settings.py: ensure_client_matches_app_version).
 
 ARG PYTHON_VERSION=3.11
 
-############################
-# Stage 1 — compiler
-############################
-FROM python:${PYTHON_VERSION}-slim AS compiler
+# ---------- 1. cliente web (fork) ----------
+FROM node:22-slim AS client
+WORKDIR /client
+COPY client-src/package.json client-src/yarn.lock ./
+RUN yarn install --frozen-lockfile
+COPY client-src/ ./
+RUN yarn build --outDir /client-dist
 
-WORKDIR /build
-
-# C toolchain + ccache for Nuitka's intermediate object cache.
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        gcc \
-        g++ \
-        patchelf \
-        ccache \
-        ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
-
-# /usr/lib/ccache shadows gcc/g++ with ccache wrappers transparently.
-ENV PATH="/usr/lib/ccache:${PATH}"
-
-RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install nuitka
-
-# Only the premium sources affect this stage. Any change to non-premium
-# code leaves this layer cached, skipping Nuitka entirely on rebuilds.
-COPY scripts/compile-premium-modules.sh ./scripts/
-COPY src/swingmusic/premium/ ./src/swingmusic/premium/
-
-RUN --mount=type=cache,target=/root/.cache/ccache,sharing=locked \
-    --mount=type=cache,target=/root/.cache/Nuitka,sharing=locked \
-    CCACHE_DIR=/root/.cache/ccache bash scripts/compile-premium-modules.sh
-
-############################
-# Stage 2 — builder
-############################
+# ---------- 2. servidor: gera o wheel ----------
 FROM python:${PYTHON_VERSION}-slim AS builder
-
 WORKDIR /src
-
-# The release workflow passes --build-arg app_version=<tag>. Export it as
-# SETUPTOOLS_SCM_PRETEND_VERSION so the wheel's metadata carries the real
-# version; without this, setuptools-scm can't see a git tag in the Docker
-# build context and bakes "0.0.0" into METADATA.
-ARG app_version=0.0.0
-ENV SETUPTOOLS_SCM_PRETEND_VERSION=${app_version}
-
-# Build backend deps. --no-build-isolation in the wheel command below
-# means we use this env directly instead of spinning up an isolated venv
-# for every rebuild — saves ~15-20s per build.
-RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install setuptools setuptools-scm
-
+RUN pip install --no-cache-dir setuptools setuptools-scm
 COPY pyproject.toml requirements.txt version.txt README.md ./
-COPY scripts/ ./scripts/
 COPY src/ ./src/
-
-# Replace premium .py sources with the .so artifacts from the compiler
-# stage. Premium source never enters the wheel — only compiled object code.
-RUN find src/swingmusic/premium -name "*.py" ! -name "__init__.py" -delete
-COPY --from=compiler /build/src/swingmusic/premium/ ./src/swingmusic/premium/
-
-RUN --mount=type=cache,target=/root/.cache/pip \
+RUN SETUPTOOLS_SCM_PRETEND_VERSION="$(cat version.txt)" \
     pip wheel . --no-deps --no-build-isolation -w /wheels
 
-############################
-# Stage 3 — runtime
-############################
+# ---------- 3. imagem final ----------
 FROM python:${PYTHON_VERSION}-slim
-
 WORKDIR /app
-
-LABEL "author"="Swing Music"
+LABEL org.opencontainers.image.title="swingmusic-dev" \
+      org.opencontainers.image.source="https://github.com/rodrigouxp/swingmusic"
 EXPOSE 1970/tcp
 VOLUME /music
 VOLUME /config
 
-# Without this, Python block-buffers stdout when it isn't a TTY (i.e. under
-# Docker), so print() output never reaches `docker logs`. Logging goes to
-# stderr (unbuffered), but app print() statements rely on this.
-ENV PYTHONUNBUFFERED=1
+# Logs no `docker logs` e comportamento de container (mesmo do upstream).
+ENV PYTHONUNBUFFERED=1 \
+    SWINGMUSIC_IN_DOCKER=1 \
+    HOME=/music
 
-# Lets the app tailor runtime output to containers (e.g. skip printing the
-# unreachable docker bridge IP in startup info).
-ENV SWINGMUSIC_IN_DOCKER=1
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libev-dev ffmpeg libavcodec-extra \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Make /music the apparent home directory inside the container so $home
-# resolves to it across the app: onboarding userHome, dir-browser default,
-# rootDirs="$home" scans, watchdog, and stream auth all pivot to /music.
-# Config and logs are insulated because the entrypoint passes --config /config.
-ENV HOME=/music
-
-# Redirect backup output (backup_and_restore.py writes to ~/swingmusic.backup)
-# into the persistent /config volume — otherwise backups would land inside
-# the user's mounted music library at /music/swingmusic.backup.
-RUN mkdir -p /config/backups /music && ln -sfn /config/backups /music/swingmusic.backup
-
-# Secondary affordance: surface /music as a clickable entry under /root in
-# the dir-browser, in case HOME resolution is bypassed somewhere.
-RUN ln -sfn /music /root/music
-
-# Runtime system packages only.
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        libev-dev \
-        ffmpeg \
-        libavcodec-extra && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-# Fallback for swingmusic/api/settings.py when Metadata.version == "0.0.0"
-# (e.g. when app_version build arg is not supplied). Opened relative to
-# WORKDIR.
-COPY version.txt /app/version.txt
-
-# Install third-party dependencies first, keyed only on the lockfile so this
-# layer stays cached across rebuilds until the dependencies actually change —
-# routine code edits no longer reinstall the dependency tree. requirements.txt
-# is generated by `uv pip compile --universal pyproject.toml -o requirements.txt`,
-# so it carries platform markers: Linux deps install here, macOS/Windows ones
-# (pyobjc, pywin32, ...) are skipped automatically.
+# Dependencias fixadas primeiro (camada cacheada), depois so o wheel do app.
 COPY requirements.txt ./
-RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install -r requirements.txt
-
-# Install only the app wheel, skipping dependency resolution. The wheel is
-# rebuilt on every source change, so isolating it here keeps the expensive
-# dependency layer above cached. --no-deps is safe because requirements.txt
-# is a complete pinned superset of the wheel's dependencies.
+RUN pip install --no-cache-dir -r requirements.txt
 COPY --from=builder /wheels/*.whl /tmp/wheels/
-RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --no-deps /tmp/wheels/*.whl && \
-    rm -rf /tmp/wheels
+RUN pip install --no-cache-dir --no-deps /tmp/wheels/*.whl && rm -rf /tmp/wheels
 
-ENTRYPOINT ["python", "-m", "swingmusic", "--host", "0.0.0.0", "--config", "/config"]
+# Cliente FORA de /config (o ZimaOS monta uma pasta ali e esconderia a imagem)
+# e com o version.txt igual ao do servidor.
+COPY version.txt /app/version.txt
+COPY --from=client /client-dist /app/client
+RUN cp /app/version.txt /app/client/version.txt
+
+HEALTHCHECK --interval=60s --timeout=5s --start-period=60s \
+    CMD python -c "import urllib.request as u; u.urlopen('http://127.0.0.1:1970/')" || exit 1
+
+ENTRYPOINT ["python", "-m", "swingmusic", "--host", "0.0.0.0", "--port", "1970", "--config", "/config", "--client", "/app/client"]

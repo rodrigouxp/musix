@@ -1,0 +1,42 @@
+# Cole em ZimaOS > Install Custom App > YAML (ou Import).
+# Roda EM PARALELO ao Swing da App Store (porta 1970, /config proprio).
+services:
+  swingmusic-dev:
+    container_name: swingmusic-dev
+    image: ghcr.io/rodrigouxp/swingmusic:dev
+    pull_policy: always
+    restart: unless-stopped
+    cpu_shares: 90
+    ports:
+      - mode: ingress
+        target: 1970
+        published: "1971"
+        protocol: tcp
+    volumes:
+      - type: bind
+        source: /DATA/AppData/swingmusic-dev/config
+        target: /config
+      - type: bind
+        source: "/media/HD_1_TB/Músicas"
+        target: /music
+    deploy:
+      resources:
+        limits:
+          memory: 5.71GB
+          cpus: "1.00"
+        reservations:
+          memory: 256MB
+          cpus: "0.00"
+x-casaos:
+  architectures:
+    - amd64
+  category: Media
+  main: swingmusic-dev
+  port_map: "1971"
+  scheme: http
+  index: /
+  title:
+    custom: Swing Dev
+  tagline:
+    custom: Fork do Swing Music (teste)
+  icon: https://cdn.jsdelivr.net/gh/IceWhaleTech/CasaOS-AppStore@main/Apps/SwingMusic/icon.png
