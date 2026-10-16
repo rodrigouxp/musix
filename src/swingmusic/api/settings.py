@@ -144,7 +144,10 @@ def get_all_settings():
     # add device name to config
     config["deviceName"] = get_device_name()
     config["deviceId"] = get_device_id()
-    config["licenseInfo"] = LicenseManager().get_license_info()
+    # free builds (sem o modulo premium) nao tem LicenseManager: o cliente aceita null
+    config["licenseInfo"] = (
+        LicenseManager().get_license_info() if LicenseManager is not None else None
+    )
 
     return config
 
