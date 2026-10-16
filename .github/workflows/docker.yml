@@ -1,0 +1,65 @@
+name: Docker (homelab)
+
+# Builda o servidor deste repo + o cliente do fork e publica no GHCR.
+# Roda a cada push na master. Mudou so o cliente? Rode manualmente (Run workflow).
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      client_ref:
+        description: "Branch, tag ou commit do cliente (padrao: master)"
+        default: "master"
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  CLIENT_REPO: rodrigouxp/swingmusic-webclient
+
+jobs:
+  image:
+    name: Build and push (amd64)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout servidor
+        uses: actions/checkout@v4
+
+      - name: Checkout cliente
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.CLIENT_REPO }}
+          ref: ${{ inputs.client_ref || 'master' }}
+          path: client-src
+          # Repo do cliente privado? Crie o secret CLIENT_REPO_TOKEN (PAT com leitura).
+          token: ${{ secrets.CLIENT_REPO_TOKEN || github.token }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Login no GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=dev
+            type=sha,prefix=sha-
+
+      - name: Build e push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

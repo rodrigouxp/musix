@@ -41,3 +41,5 @@ nohup.out
 client.zip
 *.whl
 .pypirc
+# clone local do cliente para o docker build
+client-src/

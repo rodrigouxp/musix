@@ -1,0 +1,10 @@
+.git
+**/__pycache__
+**/node_modules
+client-src/dist
+client-src/.git
+venv
+.venv
+tests
+docs
+appimage
