@@ -2,7 +2,7 @@ from pathlib import Path
 from flask_openapi3 import Tag
 from flask_openapi3 import APIBlueprint
 from pydantic import BaseModel, Field
-from flask import send_from_directory
+from flask import Response, send_from_directory
 
 from swingmusic.lib.coverart import find_best_cover
 from swingmusic.settings import Defaults, Paths
@@ -67,6 +67,17 @@ def find_thumbnail(albumhash: str, pathhash: str):
         return None, None, ""
 
     return image.parent, image.name, track_file.albumhash
+
+
+def no_cache(response):
+    """
+    Makes the browser revalidate (ETag / Last-Modified) on every request,
+    so a rebuilt cover shows up without a hard refresh.
+    """
+    if isinstance(response, Response):
+        response.headers["Cache-Control"] = "no-cache"
+
+    return response
 
 
 def send_fallback_img(filename: str = "default.webp"):
@@ -169,7 +180,9 @@ def send_thumbnail(path: ImagePath, query: ImageQuery):
         size = "large"
 
     folder = _THUMBNAIL_FOLDERS[size]()
-    return send_file_or_fallback(str(folder), path.imgpath, pathhash=query.pathhash)
+    return no_cache(
+        send_file_or_fallback(str(folder), path.imgpath, pathhash=query.pathhash)
+    )
 
 
 # ARTISTS

@@ -4,6 +4,7 @@ Contains all the album routes.
 
 import random
 from dataclasses import asdict
+from pathlib import Path
 
 from flask_openapi3 import Tag
 from pydantic import BaseModel, Field
@@ -14,9 +15,12 @@ from swingmusic.api.apischemas import (
     ArtistHashSchema,
 )
 
+from swingmusic.api.auth import admin_required
 from swingmusic.config import UserConfig
 from swingmusic.db.userdata import SimilarArtistTable
+from swingmusic.lib.coverart import refresh_album_art
 from swingmusic.models.album import Album
+from swingmusic.settings import Paths
 from swingmusic.store.albums import AlbumStore
 from swingmusic.store.artists import ArtistStore
 from swingmusic.store.tracks import TrackStore
@@ -128,6 +132,31 @@ def get_album_tracks(path: AlbumHashSchema):
     tracks = sort_by_track_no(tracks)
 
     return serialize_tracks(tracks)
+
+
+@api.post("/<albumhash>/refresh-cover")
+@admin_required()
+def refresh_album_cover(path: AlbumHashSchema):
+    """
+    Refresh album cover
+
+    Rebuilds the cached cover of the album from the folder image
+    (cover.jpg, folder.jpg, ...) or, if there is none, from the embedded art.
+    """
+    tracks = AlbumStore.get_album_tracks(path.albumhash)
+
+    if not tracks:
+        return {"error": "Album not found"}, 404
+
+    has_cover = refresh_album_art(
+        path.albumhash,
+        Path(tracks[0].folder),
+        [track.filepath for track in tracks],
+        Paths(),
+        overwrite=True,
+    )
+
+    return {"ok": True, "has_cover": has_cover}
 
 
 @api.post("/from-artist")

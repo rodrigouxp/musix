@@ -1,3 +1,4 @@
+import threading
 from typing import Any
 from flask_openapi3 import Tag
 from flask_openapi3 import APIBlueprint
@@ -12,8 +13,10 @@ from swingmusic.store.general import GeneralStore
 
 from swingmusic.api.auth import admin_required
 from swingmusic.lib.index import index_everything
+from swingmusic.lib.populate import ProcessTrackThumbnails
 from swingmusic.utils.paths import normalize_paths
 from swingmusic.utils.auth import get_current_userid
+from swingmusic.utils.threading import background
 
 # Config keys returned by GET /notsettings
 PUBLIC_SETTINGS = (
@@ -202,3 +205,28 @@ def update_config(body: UpdateConfigBody):
     return {
         "msg": "Config updated!",
     }
+
+
+_covers_lock = threading.Lock()
+
+
+@background
+def _refresh_all_covers():
+    # one rebuild at a time: a second click while it runs is a no-op
+    if not _covers_lock.acquire(blocking=False):
+        return
+
+    try:
+        ProcessTrackThumbnails(overwrite_track_thumbnails=True)
+    finally:
+        _covers_lock.release()
+
+
+@api.post("/refresh-covers")
+@admin_required()
+def refresh_covers():
+    """
+    Rebuilds the covers of all albums in the background.
+    """
+    _refresh_all_covers()
+    return {"ok": True}
