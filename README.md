@@ -17,8 +17,9 @@ MUSIX é um servidor de streaming de música para rodar em casa. Como um Spotify
 - **Detecção de silêncio** - combina crossfade com detecção de silêncio
 - **Coleções** - agrupe álbuns e artistas
 - **Estatísticas** - dados sobre o que você ouve
-- **Scrobble no Last.fm**
 - **Vários usuários**
+- **Classificação manual de álbuns** - marque à mão EPs & Singles, trilhas sonoras e álbuns ao vivo (nada é adivinhado pelo título)
+- **Foto do artista** - envie uma do computador ou busque a automática de novo
 - **Capas** - a capa vem da imagem da pasta (`cover.jpg`, `folder.jpg`...) ou da arte embutida, e pode ser atualizada pelo menu do álbum ou em Settings > Library > Albums
 
 ## Instalação
@@ -58,6 +59,10 @@ Quando o cliente web é informado com `--client` (ou `MUSIX_CLIENT_DIR`), o serv
 ### Dados de versões anteriores
 
 Na primeira execução, uma pasta de dados criada com o nome antigo (`swingmusic` ou `.swingmusic`) é renomeada para `musix` (ou `.musix`), junto com o banco (`swingmusic.db` vira `musix.db`). Nada é apagado.
+
+## Versões
+
+O histórico de cada versão está em [`CHANGELOG.md`](CHANGELOG.md). O número fica em `version.txt` e aparece em Settings > About.
 
 ## Origem
 
