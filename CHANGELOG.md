@@ -8,6 +8,10 @@ A versão do MUSIX fica em [`version.txt`](version.txt) (fonte única). É o nú
 
 O cliente web (`musix-webclient`) não tem número próprio: ele é empacotado junto com o servidor na imagem Docker.
 
+## 3.3.2
+
+- Menu de contexto (todos os menus) com as cores e medidas do design system do Figma (`src/assets/scss/_musix-tokens.scss`): fundo `#222222`, texto `#ECECEC`, item selecionado azul `#1267B7` com texto branco e ícone cinza, raio e sombra do protótipo. Menu do álbum com 10 px de espaço acima e abaixo de cada divisor, para o hover não encostar na linha. Larguras e disposição dos menus de faixa, artista e playlist não mudam; itens críticos continuam no vermelho do app. Só o cliente mudou: a versão sobe para disparar a build da imagem.
+
 ## 3.3.1
 
 - Menu do álbum no desenho do protótipo (Figma): ícones novos, itens em grupos separados por divisores finos (reprodução e listas; capa; marcação; "Search on") e seta de submenu nova em todos os menus. O menu do álbum fica com 232 px de largura; os menus de faixa, artista e playlist mantêm tamanho, ícones e ordem. Só o cliente mudou: a versão sobe para disparar a build da imagem.
