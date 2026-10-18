@@ -2,13 +2,10 @@ from types import SimpleNamespace
 
 import pytest
 from flask_openapi3 import OpenAPI
-from sqlalchemy import create_engine
 
 from musix.api import album as album_api
 from musix.api import artist as artist_api
 from musix.api import auth as auth_api
-from musix.db import create_all_tables
-from musix.db.engine import DbEngine
 from musix.db.userdata import AlbumTypeTable
 from musix.models.album import Album
 from musix.serializers.album import serialize_for_card
@@ -48,14 +45,10 @@ def make_track(title: str, albumhash: str, n: int = 1):
 
 
 @pytest.fixture(autouse=True)
-def database(tmp_path, monkeypatch):
-    engine = create_engine(f"sqlite+pysqlite:///{tmp_path / 'app.db'}")
-    monkeypatch.setattr(DbEngine, "_engine", engine)
-    create_all_tables()
+def clean_album_types(database):
     AlbumTypeStore.overrides = {}
     yield
     AlbumTypeStore.overrides = {}
-    engine.dispose()
 
 
 @pytest.mark.parametrize(

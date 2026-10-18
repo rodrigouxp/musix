@@ -4,10 +4,13 @@ Contains all the artist(s) routes.
 
 import math
 import random
+from io import BytesIO
 from datetime import datetime, timezone
 from typing import Any
 
+from flask import request
 from flask_openapi3 import APIBlueprint, Tag
+from PIL import Image, ImageOps
 from pydantic import Field
 from musix.api.apischemas import (
     AlbumLimitSchema,
@@ -16,7 +19,15 @@ from musix.api.apischemas import (
     TrackLimitSchema,
 )
 
+from musix.api.auth import admin_required
 from musix.db.userdata import SimilarArtistTable
+from musix.lib.artistlib import (
+    DownloadImage,
+    artist_image_entries,
+    get_artist_image_link,
+    set_manual_artist_image,
+    update_artist_color,
+)
 from musix.lib.sortlib import sort_tracks
 from musix.models.track import Track
 
@@ -230,3 +241,98 @@ def get_similar_artists(path: ArtistHashSchema, query: ArtistLimitSchema):
         similar = random.sample(similar, min(limit, len(similar)))
 
     return serialize_for_cards(similar[:limit])
+
+
+MAX_ARTIST_IMAGE_BYTES = 10 * 1024 * 1024
+ARTIST_IMAGE_FORMATS = {"JPEG", "PNG", "WEBP"}
+
+
+def read_uploaded_artist_image() -> tuple[Image.Image | None, str]:
+    """
+    Reads the ``image`` field of the request. Returns the image (RGB, cut to
+    the central square) or ``None`` and the reason it was refused.
+    """
+    file = request.files.get("image")
+
+    if file is None:
+        return None, "Send the photo in the image field"
+
+    data = file.stream.read(MAX_ARTIST_IMAGE_BYTES + 1)
+
+    if len(data) > MAX_ARTIST_IMAGE_BYTES:
+        return None, "The photo is bigger than 10 MB"
+
+    try:
+        img = Image.open(BytesIO(data))
+        image_format = img.format
+        img.load()
+    except Exception:
+        return None, "That file is not an image"
+
+    if image_format not in ARTIST_IMAGE_FORMATS:
+        return None, "Only JPEG, PNG or WEBP photos are accepted"
+
+    img = ImageOps.exif_transpose(img).convert("RGB")
+    side = min(img.width, img.height)
+    left = (img.width - side) // 2
+    top = (img.height - side) // 2
+
+    return img.crop((left, top, left + side, top + side)), ""
+
+
+@api.post("/<artisthash>/image")
+@admin_required()
+def upload_artist_image(path: ArtistHashSchema):
+    """
+    Upload the artist photo
+
+    Send a JPEG, PNG or WEBP (up to 10 MB) in the ``image`` form field. The
+    photo is marked as chosen by hand, so the automatic download never replaces it.
+    """
+    artisthash = path.artisthash
+
+    if ArtistStore.artistmap.get(artisthash) is None:
+        return {"error": "Artist not found"}, 404
+
+    img, reason = read_uploaded_artist_image()
+
+    if img is None:
+        return {"error": reason}, 400
+
+    name = f"{artisthash}.webp"
+    DownloadImage.save_img(img, artist_image_entries(name))
+    set_manual_artist_image(artisthash, True)
+    update_artist_color(artisthash)
+
+    return {"ok": True, "image": name, "source": "upload"}
+
+
+@api.post("/<artisthash>/image/refetch")
+@admin_required()
+def refetch_artist_image(path: ArtistHashSchema):
+    """
+    Fetch the automatic artist photo again
+
+    Downloads the photo from Deezer, replaces the current one (even one chosen
+    by hand) and removes the "chosen by hand" mark.
+    """
+    artisthash = path.artisthash
+    entry = ArtistStore.artistmap.get(artisthash)
+
+    if entry is None:
+        return {"error": "Artist not found"}, 404
+
+    url = get_artist_image_link(entry.artist.name)
+
+    if url is None:
+        return {"error": "No automatic photo was found for this artist"}, 502
+
+    name = f"{artisthash}.webp"
+
+    if not DownloadImage(url, name).saved:
+        return {"error": "Could not download the photo"}, 502
+
+    set_manual_artist_image(artisthash, False)
+    update_artist_color(artisthash)
+
+    return {"ok": True, "image": name, "source": "deezer"}

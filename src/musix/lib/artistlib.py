@@ -81,25 +81,101 @@ def get_artist_image_link(artist: str):
         #     return None
 
 
+def artist_image_entries(name: str) -> list[tuple[Path, int | None]]:
+    """
+    The three files an artist photo is saved to: the original size
+    and the small and medium thumbnails.
+    """
+    paths = settings.Paths()
+
+    return [
+        (paths.lg_artist_img_path / name, None),  # save in the original size
+        (paths.sm_artist_img_path / name, settings.Defaults.SM_ARTIST_IMG_SIZE),
+        (paths.md_artist_img_path / name, settings.Defaults.MD_ARTIST_IMG_SIZE),
+    ]
+
+
+def _manual_marker(artisthash: str) -> Path:
+    return settings.Paths().artist_img_path / "manual" / artisthash
+
+
+def is_manual_artist_image(artisthash: str) -> bool:
+    """
+    Whether the photo of the artist was chosen by hand. The automatic
+    download never replaces such a photo.
+    """
+    return _manual_marker(artisthash).exists()
+
+
+def set_manual_artist_image(artisthash: str, manual: bool):
+    """
+    Saves (or removes) the "chosen by hand" mark of an artist photo.
+    The mark is an empty file named after the artist hash.
+    """
+    marker = _manual_marker(artisthash)
+
+    if manual:
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.touch()
+    else:
+        marker.unlink(missing_ok=True)
+
+
+def update_artist_color(artisthash: str):
+    """
+    Works out the colour of the artist photo again, after the photo was replaced.
+    """
+    # imported here to avoid a circular import
+    from musix.db.userdata import LibDataTable
+    from musix.lib.colorlib import extract_color_worker
+
+    result = extract_color_worker(
+        {
+            "hash_field": "artisthash",
+            "path_func": settings.Paths().sm_artist_img_path,
+            "artisthash": artisthash,
+        }
+    )
+
+    if result["color"] is None:
+        return
+
+    existing = LibDataTable.find_one(artisthash, type="artist")
+    extra = {**((existing or {}).get("extra") or {}), "blurhash": result["blurhash"]}
+
+    if existing is None:
+        LibDataTable.insert_one(
+            {
+                "itemhash": "artist" + artisthash,
+                "color": result["color"],
+                "itemtype": "artist",
+                "extra": extra,
+            }
+        )
+    else:
+        LibDataTable.update_one(
+            "artist" + artisthash, {"color": result["color"], "extra": extra}
+        )
+
+    entry = ArtistStore.artistmap.get(artisthash)
+
+    if entry:
+        entry.update_color_info(result["color"], result["blurhash"])
+
+
 # TODO: Move network calls to utils/network.py
 class DownloadImage:
+    # whether the image was downloaded and saved
+    saved: bool = False
+
     def __init__(self, url: str, name: str) -> None:
         img = self.download(url)
 
         if img is None:
             return
 
-        sm_path = settings.Paths().sm_artist_img_path / name
-        lg_path = settings.Paths().lg_artist_img_path / name
-        md_path = settings.Paths().md_artist_img_path / name
-
-        entries = [
-            (lg_path, None),  # save in the original size
-            (sm_path, settings.Defaults.SM_ARTIST_IMG_SIZE),
-            (md_path, settings.Defaults.MD_ARTIST_IMG_SIZE),
-        ]
-
-        self.save_img(img, entries)
+        self.save_img(img, artist_image_entries(name))
+        self.saved = True
 
     @staticmethod
     def download(url: str) -> Image.Image | None:
@@ -170,7 +246,7 @@ class CheckArtistImages:
                 settings.Paths().sm_artist_img_path / f"{artist.artisthash}.webp"
         )
 
-        if img_path.exists():
+        if img_path.exists() or is_manual_artist_image(artist.artisthash):
             return
 
         url = get_artist_image_link(artist.name)
