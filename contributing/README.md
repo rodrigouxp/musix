@@ -1,13 +1,13 @@
-# SwingMusic Project Structure and Architecture
+# MUSIX Project Structure and Architecture
 
-This document provides a comprehensive overview of how SwingMusic is structured, how its components interact, and the application lifecycle from startup to ready state.
+This document provides a comprehensive overview of how MUSIX is structured, how its components interact, and the application lifecycle from startup to ready state.
 
 > [!IMPORTANT]
 > Disclaimer: This document was drafted with the help of an LLM. Last updated on July 14th, 2025.
 
 ## Project Overview
 
-SwingMusic is a modern music streaming server built with Python (Flask) on the backend and Vue.js on the frontend. It provides a self-hosted music library management system with features like audio streaming, playlist management, favorite tracking, and metadata extraction.
+MUSIX is a modern music streaming server built with Python (Flask) on the backend and Vue.js on the frontend. It provides a self-hosted music library management system with features like audio streaming, playlist management, favorite tracking, and metadata extraction.
 
 ## High-Level Architecture
 
@@ -49,9 +49,9 @@ graph TB
 ## Directory Structure
 
 ```sh
-swingmusic/
+musix/
 ├── client/                   # Built Vue.js frontend (static files)
-├── swingmusic/               # Main Python package
+├── musix/               # Main Python package
 │   ├── __main__.py           # CLI entry point
 │   ├── api/                  # REST API endpoints
 │   │   ├── __init__.py       # Flask app creation & blueprint registration
@@ -101,7 +101,7 @@ swingmusic/
 │   │   └── mixes.py          # Automated playlist generation
 │   ├── config.py             # Configuration management
 │   ├── settings.py           # Path and system settings
-│   └── start_swingmusic.py   # Application startup
+│   └── start_musix.py   # Application startup
 ├── run.py                    # Application launcher
 ├── requirements.txt          # Python dependencies
 └── docs/                     # Documentation
@@ -111,7 +111,7 @@ swingmusic/
 
 ### 1. Data Models (`models/`)
 
-SwingMusic uses dataclasses for its core data models, providing type safety and automatic serialization:
+MUSIX uses dataclasses for its core data models, providing type safety and automatic serialization:
 
 #### Track Model (`models/track.py`)
 - **Purpose**: Represents individual audio files with rich metadata
@@ -225,7 +225,7 @@ sequenceDiagram
     participant Flask as Flask App
     participant BG as Background Tasks
     
-    CLI->>Main: start_swingmusic(host, port)
+    CLI->>Main: start_musix(host, port)
     Main->>Setup: run_setup()
     Setup->>DB: Create directories, setup SQLite
     Setup->>DB: Run migrations
@@ -269,13 +269,13 @@ sequenceDiagram
    map_album_colors()             # Album artwork colors
    ```
 
-4. **Flask Application Setup** (`start_swingmusic.py`)
+4. **Flask Application Setup** (`start_musix.py`)
    - **API Creation**: Blueprint registration, OpenAPI docs
    - **Middleware Setup**: JWT authentication, CORS, compression
    - **Static Files**: Client serving with gzip support
    - **Route Protection**: Authentication requirements
 
-5. **Background Services** (`start_swingmusic.py`)
+5. **Background Services** (`start_musix.py`)
    - **Plugin Registration**: Load and initialize plugins
    - **Cron Jobs**: Periodic tasks (scanning, cleanup)
    - **Process Management**: Set process title, resource limits
@@ -327,7 +327,7 @@ graph LR
 ## Component Coordination
 
 ### Hash-Based Entity System
-SwingMusic uses hashes for entity identification:
+MUSIX uses hashes for entity identification:
 
 - **Track Hash**: `hash(title + album + artists)` - Content-based deduplication
 - **Album Hash**: `hash(title + album_artists)` - Album identification

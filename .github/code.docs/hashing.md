@@ -22,7 +22,7 @@ When showing an album with duplicates, we filter out duplicates and show tracksw
 
 ### 2. Downloading images from the internet
 
-Swing Music uses Deezer as the artist image provider. When searching for artist images, the first result is not always the correct artist. Therefore, we use hashing to get the correct artist image from the list of results.
+MUSIX uses Deezer as the artist image provider. When searching for artist images, the first result is not always the correct artist. Therefore, we use hashing to get the correct artist image from the list of results.
 
 For this specific task, we also consider decoding artist names for special characters. (eg. `Chlöe` and `Chloe` are the same artist). The `unidecode` library is used for decoding.
 

@@ -1,10 +1,10 @@
 TODO:
-* add architecture of swingmusic
+* add architecture of musix
 
 
 ```
 config folder
-├───swingmusic
+├───musix
     ├───assets
     ├───images
     │   ├───artists

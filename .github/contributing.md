@@ -1,6 +1,6 @@
-# Swing Music Contributing Guide
+# MUSIX Contributing Guide
 
-Hi! We're really excited that you are interested in contributing to Swing Music. This project uses Python, [Flask](https://flask.palletsprojects.com/en/2.3.x/), Sqlite, [uv](https://docs.astral.sh/uv), and [Vue](https://vuejs.org/).
+Hi! We're really excited that you are interested in contributing to MUSIX. This project uses Python, [Flask](https://flask.palletsprojects.com/en/2.3.x/), Sqlite, [uv](https://docs.astral.sh/uv), and [Vue](https://vuejs.org/).
 
 If you are interested in making a code contribution take a moment to read through the following guidelines:
 
@@ -21,27 +21,27 @@ If you are interested in making a code contribution take a moment to read throug
 
 ## Development Setup
 
-This project is broken down into 2 parts. The server (this repo) and the client (which lives [here](https://github.com/swing-opensource/swingmusic-client)).
+This project is broken down into 2 parts. The server (this repo) and the client (which lives [here](https://github.com/rodrigouxp/musix-webclient)).
 
 To contribute to the server development, you need to install [uv package manager](https://docs.astral.sh/uv).
 
 Fork this repo, git clone and install the dependencies:
 
 ```sh
-git clone https://github.com/swingmx/swingmusic.git
+git clone https://github.com/rodrigouxp/musix.git
 
 # or with ssh
 
-git clone git@github.com:swingmx/swingmusic.git
+git clone git@github.com:rodrigouxp/musix.git
 
-cd swingmusic
+cd musix
 uv sync
 ```
 
 Finally, run the server for development on port 1980.
 
 ```sh
-uv run python -m swingmusic --port 1980
+uv run python -m musix --port 1980
 ```
 
 After that, checkout into a new branch and make your changes.
@@ -59,13 +59,13 @@ You need to have [yarn](https://yarnpkg.com) installed in your machine. Please c
 Fork the repo, git clone and install the dependencies:
 
 ```sh
-git clone https://github.com/swing-opensource/swingmusic-client.git
+git clone https://github.com/rodrigouxp/musix-webclient.git
 
 # or with ssh
 
-git clone git@github.com:swing-opensource/swingmusic-client.git
+git clone git@github.com:rodrigouxp/musix-webclient.git
 
-cd swingmusic-client
+cd musix-client
 yarn install
 ```
 
@@ -82,7 +82,7 @@ You can see the client at http://localhost:5173.
 
 ## Where can I go for help?
 
-If you need help, you can find users and contributors on [Swing Music Community](https://t.me/+9n61PFcgKhozZDE0) Telegram chat.
+If you need help, you can find users and contributors on [MUSIX Community](https://t.me/+9n61PFcgKhozZDE0) Telegram chat.
 
 ## What does the Code of Conduct mean for me?
 

@@ -1,6 +1,6 @@
 <!--
 Please make sure to read the Pull Request Guidelines:
-https://github.com/swing-opensource/swingmusic/.github/CONTRIBUTING.md#pull-request-guidelines
+https://github.com/rodrigouxp/musix/.github/CONTRIBUTING.md#pull-request-guidelines
 -->
 
 <!-- PULL REQUEST TEMPLATE -->

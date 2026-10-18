@@ -1,176 +1,70 @@
 <div align="center" style="display: flex; justify-content: center; align-items: center;">
-  <img class="lo" src='https://github.com/swingmx/swingmusic/raw/master/.github/images/logo-fill.light.svg' style="height: 4rem">
+  <img src='.github/images/logo-fill.light.svg' style="height: 4rem">
 </div>
-<div align="center" style="font-size: 2rem"><b>Swing Music</b></div>
-
-<div align="center">
-  <img src="https://img.shields.io/github/v/release/swingmx/swingmusic" alt="Latest GitHub Release" />
-</div>
- 
-**<div align="center" style="padding-top: 1.25rem">[Download](https://swingmx.com/downloads) • [Get Android Client](https://github.com/swingmx/android) •  <a href="https://github.com/sponsors/swingmx" target="_blank">Sponsor Us ❤️</a> • [Docs](https://swingmx.com/guide/introduction.html) • [Screenshots](https://swingmx.com) • [r/SwingMusicApp](https://www.reddit.com/r/SwingMusicApp)</div>**
+<div align="center" style="font-size: 2rem"><b>MUSIX</b></div>
 
 ##
 
-[![Image showing the Swing Music artist page](https://raw.githubusercontent.com/swingmx/swingmusic/master/.github/images/artist.webp)](https://raw.githubusercontent.com/swing-opensource/swingmusic/master/.github/images/artist.webp)
+MUSIX é um servidor de streaming de música para rodar em casa. Como um Spotify mais simples, mas com a sua própria música: aponte para as pastas, abra no navegador e ouça.
 
-##
+## Recursos
 
-Swing Music is a blazingly fast and beautiful, self-hosted music streaming server. Like a cooler Spotify ... but bring your own music.
+- **Normalização de metadados** - uma biblioteca limpa e consistente
+- **Versões de álbum** - álbuns normalizados e associados a rótulos de versão (Deluxe, Remaster etc.)
+- **Artistas e álbuns relacionados**
+- **Visão por pastas** - navegue pela biblioteca pelas pastas
+- **Interface web**
+- **Detecção de silêncio** - combina crossfade com detecção de silêncio
+- **Coleções** - agrupe álbuns e artistas
+- **Estatísticas** - dados sobre o que você ouve
+- **Scrobble no Last.fm**
+- **Vários usuários**
+- **Capas** - a capa vem da imagem da pasta (`cover.jpg`, `folder.jpg`...) ou da arte embutida, e pode ser atualizada pelo menu do álbum ou em Settings > Library > Albums
 
-## Features
+## Instalação
 
-- **Daily Mixes** - curated everyday based on your listening activity
-- **Metadata normalization** - a clean and consistent library
-- **Album versioning** - normalized albums and association with version labels (eg. Deluxe, Remaster, etc)
-- **Related artist and albums**
-- **Folder view** - Browse your music library by folders
-- **Beautiful browser based UI**
-- **Silence detection** - Combine cross-fade with silence detection to create a seamless listening experience
-- **Collections** - Group albums and artists based on your preferences
-- **Statistics** - Get insights into your listening activity
-- **Last.fm scrobbling**
-- **Multi-user support**
-- **Cross-platform** - Windows, Linux, MacOS (coming soon), arm64, x86
-
-### Installation
-
-On Linux or MacOS run the command below to install Swing Music:
-
-```sh
-curl -fsSL https://setup.swingmx.com | bash
-```
-
-To run Swing Music on Windows, download the portable build from the [downloads page](https://swingmx.com/downloads.html) and run it.
-
-The app should start at <http://localhost:1970> by default. Open the URL in your browser to configure and use Swing Music.
-
-> [!TIP]
-> To stream your music from your Android device, download the [Android mobile client](https://github.com/swingmx/android).
-
-#### Using Docker Compose
-
-Here's a sample Docker compose file:
+### Docker Compose
 
 ```yaml
 services:
-  swingmusic:
-    image: ghcr.io/swingmx/swingmusic:latest
-    container_name: swingmusic
+  musix:
+    image: ghcr.io/rodrigouxp/musix:dev
+    container_name: musix
     ports:
       - "1970:1970"
     volumes:
-      - /path/to/music:/music
-      - /path/to/config:/config
-    environment:
-      - SWINGMUSIC_PORT=1970
-      - SWINGMUSIC_DEVICE_NAME=Host name here
+      - /caminho/da/musica:/music
+      - /caminho/da/config:/config
     restart: unless-stopped
 ```
 
-The `SWINGMUSIC_DEVICE_NAME` sets the name this server reports to connected clients. To use a different port, change both `SWINGMUSIC_PORT` and the `ports` mapping to match (e.g. `2001:2001` with `SWINGMUSIC_PORT=2001`).
+A interface abre em <http://localhost:1970>. Para outra porta, troque o mapeamento em `ports`.
 
-### Using Docker CLI
+No ZimaOS há um arquivo pronto em [`deploy/zimaos-compose.yml`](deploy/zimaos-compose.yml).
 
-```sh
-docker pull ghcr.io/swingmx/swingmusic:latest
-```
-
-Then run:
+### Docker CLI
 
 ```sh
-docker run --name swingmusic -p 1970:1970 -e SWINGMUSIC_PORT=1970 -e SWINGMUSIC_DEVICE_NAME="Host Name Here" -v /path/to/music:/music -v /path/to/config:/config --restart unless-stopped ghcr.io/swingmx/swingmusic:latest
+docker pull ghcr.io/rodrigouxp/musix:dev
+docker run --name musix -p 1970:1970 -v /caminho/da/musica:/music -v /caminho/da/config:/config --restart unless-stopped ghcr.io/rodrigouxp/musix:dev
 ```
 
-Replace the following with appropriate values:
+### Opções
 
-1. `/path/to/music` - Your music directory on the host
-2. `/path/to/config` - Path to create Swing Music configs on the host
-3. `Host Name Here` - Your host device name
+Flags podem ser passadas ao iniciar o app no terminal (`python -m musix -h` lista todas). As principais variáveis de ambiente são `MUSIX_PORT`, `MUSIX_CONFIG_DIR` e `MUSIX_CLIENT_DIR`.
 
-You can change the Swing Music port by updating both the `-p` mapping and `SWINGMUSIC_PORT` to the same value (e.g. `-p 2001:2001 -e SWINGMUSIC_PORT=2001`).
+Quando o cliente web é informado com `--client` (ou `MUSIX_CLIENT_DIR`), o servidor usa a pasta como está: não compara versões e não baixa nada.
 
-### Options
+### Dados de versões anteriores
 
-Options flags can be passed when starting the app in the terminal to tweak runtime settings or perform tasks. You can use the `-h` flag to see all supported options.
+Na primeira execução, uma pasta de dados criada com o nome antigo (`swingmusic` ou `.swingmusic`) é renomeada para `musix` (ou `.musix`), junto com o banco (`swingmusic.db` vira `musix.db`). Nada é apagado.
 
-> [!TIP]
-> You can read more about options in [the docs](https://swingmx.com/guide/introduction.html#options).
+## Origem
 
-### Contributing and Development
+MUSIX é baseado no [Swing Music](https://github.com/swingmx/swingmusic), com modificações. O código do servidor segue a licença **AGPL-3.0**; o texto completo está no arquivo [`LICENSE`](LICENSE), com o aviso de copyright original. O cliente web, também baseado no projeto original, tem a própria licença (MIT) no repositório [musix-webclient](https://github.com/rodrigouxp/musix-webclient).
 
-Swing Music is looking for contributors. If you're interested, please join us at the [Swing Music Community](https://t.me/+9n61PFcgKhozZDE0) group on Telegram. For more information, take a look at https://github.com/swing-opensource/swingmusic/issues/186.
+O histórico do git preserva a autoria do projeto original e de seus colaboradores.
 
-[**CONTRIBUTING GUIDELINES**](.github/contributing.md).
+## Desenvolvimento
 
-### License
-
-This software is provided to you with terms stated in the [AGPLv3 License](https://github.com/swingmx/swingmusic/blob/master/LICENSE) or any later version. Read the full text in the `LICENSE` file located at the root of this repository.
-
-### Contributors
-
-Shout out to the following code contributors who have helped maintain and improve Swing Music:
-
-<div align="left">
-  <table>
-    <tr>
-      <td align="center">
-        <a href="https://github.com/cwilvx">
-          <img src="https://github.com/cwilvx.png" width="80px;"/>
-          <br />
-          <sub><b>@cwilvx</b></sub>
-        </a>
-      </td>
-      <td align="center">
-        <a href="https://github.com/Ericgacoki">
-          <img src="https://github.com/Ericgacoki.png" width="80px;" alt=""/>
-          <br />
-          <sub><b>@Ericgacoki</b></sub>
-        </a>
-      </td>
-      <td align="center">
-        <a href="https://github.com/Simonh2o">
-          <img src="https://github.com/Simonh2o.png" width="80px;"/>
-          <br />
-          <sub><b>@Simonh2o</b></sub>
-        </a>
-      </td>
-      <td align="center">
-        <a href="https://github.com/tcsenpai">
-          <img src="https://github.com/tcsenpai.png" width="80px;"/>
-          <br />
-          <sub><b>@tcsenpai</b></sub>
-        </a>
-      </td>
-      <td align="center">
-        <a href="https://github.com/jensgrunzer1">
-          <img src="https://github.com/jensgrunzer1.png" width="80px;"/>
-          <br />
-          <sub><b>@jensgrunzer1</b></sub>
-        </a>
-      </td>
-      <td align="center">
-        <a href="https://github.com/Type-Delta">
-          <img src="https://github.com/Type-Delta.png" width="80px;" alt=""/>
-          <br />
-          <sub><b>@Type-Delta</b></sub>
-        </a>
-      </td>
-     <td align="center">
-        <a href="https://github.com/MarcOrfilaCarreras">
-          <img src="https://github.com/MarcOrfilaCarreras.png" width="80px;" alt=""/>
-          <br />
-          <sub><b>@MarcOrfilaCarreras</b></sub>
-        </a>
-      </td>
-    </tr>
-    <tr>
-    <td align="center">
-      <a href="https://github.com/tralph3">
-        <img src="https://github.com/tralph3.png" width="80px;" alt=""/>
-        <br />
-          <sub><b>@tralph3</b></sub>
-        </a>
-      </td>
-    </tr>
-  </table>
-</div>
+O servidor é Python (Flask); o cliente fica em outro repositório ([musix-webclient](https://github.com/rodrigouxp/musix-webclient)). Veja [`.github/contributing.md`](.github/contributing.md).
