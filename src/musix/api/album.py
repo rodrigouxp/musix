@@ -17,7 +17,12 @@ from musix.api.apischemas import (
 
 from musix.api.auth import admin_required
 from musix.db.userdata import AlbumTypeTable, SimilarArtistTable
-from musix.lib.coverart import refresh_album_art
+from musix.lib.coverart import (
+    find_best_cover,
+    read_cover_for_embedding,
+    refresh_album_art,
+)
+from musix.lib.tagwriter import TagChanges, TagWriteError, write_tags
 from musix.models.album import Album
 from musix.settings import Paths
 from musix.store.albums import AlbumStore
@@ -190,6 +195,75 @@ def set_album_type(path: AlbumHashSchema, body: AlbumTypeBody):
     entry.album.check_type()
 
     return {"ok": True, "kind": kind}
+
+
+@api.post("/<albumhash>/embed-cover")
+@admin_required()
+def embed_album_cover(path: AlbumHashSchema):
+    """
+    Save the cover into the files
+
+    Writes the cover image of the album folder (cover.jpg, folder.jpg, ...) as the
+    embedded cover of every music file of the album. Nothing is created or
+    renamed in the folders. A file that fails does not stop the others.
+    """
+    albumhash = path.albumhash
+    entry = AlbumStore.albummap.get(albumhash)
+
+    if entry is None:
+        return {"error": "Album not found"}, 404
+
+    tracks = []
+    for trackhash in entry.trackhashes:
+        group = TrackStore.trackhashmap.get(trackhash)
+
+        if group:
+            tracks.extend(t for t in group.tracks if t.albumhash == albumhash)
+
+    if not tracks:
+        return {"error": "Album not found"}, 404
+
+    cover = None
+    for folder in dict.fromkeys(Path(t.folder) for t in tracks):
+        cover = find_best_cover(folder)
+
+        if cover is not None:
+            break
+
+    if cover is None:
+        return {"error": "This album has no cover image in its folder"}, 400
+
+    try:
+        data, mime = read_cover_for_embedding(cover)
+    except Exception:
+        return {"error": f"Could not read the cover image {cover.name}"}, 400
+
+    ok = 0
+    failed: dict[str, str] = {}
+
+    for track in tracks:
+        try:
+            write_tags(track.filepath, TagChanges(cover=(data, mime)))
+            ok += 1
+        except TagWriteError as error:
+            failed[track.filepath] = str(error)
+        except Exception as error:
+            failed[track.filepath] = f"unexpected error: {error}"
+
+    refresh_album_art(
+        albumhash,
+        Path(tracks[0].folder),
+        [track.filepath for track in tracks],
+        Paths(),
+        overwrite=True,
+    )
+
+    return {
+        "ok": True,
+        "tracks_ok": ok,
+        "tracks_failed": list(failed),
+        "errors": failed,
+    }
 
 
 @api.post("/from-artist")

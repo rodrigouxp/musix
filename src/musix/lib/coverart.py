@@ -347,6 +347,27 @@ def refresh_album_art(
     return False
 
 
+def read_cover_for_embedding(image_path: Path) -> tuple[bytes, str]:
+    """
+    Reads a cover file as the bytes and the mime type to put in the tags.
+    JPEG and PNG go in as they are; other formats (WEBP) are saved as PNG,
+    which every player reads.
+    """
+    suffix = image_path.suffix.lower()
+
+    if suffix in (".jpg", ".jpeg"):
+        return image_path.read_bytes(), "image/jpeg"
+
+    if suffix == ".png":
+        return image_path.read_bytes(), "image/png"
+
+    with Image.open(image_path) as img:
+        buffer = BytesIO()
+        img.convert("RGBA" if "A" in img.getbands() else "RGB").save(buffer, format="PNG")
+
+    return buffer.getvalue(), "image/png"
+
+
 def is_library_image(path: str | Path) -> bool:
     return Path(path).suffix.lower() in IMAGE_EXTENSIONS
 
