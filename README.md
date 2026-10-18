@@ -65,6 +65,16 @@ Quando o cliente web é informado com `--client` (ou `MUSIX_CLIENT_DIR`), o serv
 
 Na primeira execução, uma pasta de dados criada com o nome antigo (`swingmusic` ou `.swingmusic`) é renomeada para `musix` (ou `.musix`), junto com o banco (`swingmusic.db` vira `musix.db`). Nada é apagado.
 
+## Guia das funções de edição
+
+Tudo abaixo é só para admin e fica nos menus (...) e na página do artista. As funções que escrevem em arquivos de música usam arquivo temporário e conferência: se algo não bater, o original fica como estava. Cada renomeação deixa uma linha em `rename-journal.jsonl` na pasta de configuração, para desfazer à mão se precisar (não é backup do áudio). **Teste primeiro em poucos arquivos ou numa cópia.**
+
+- **Marcar álbum** (menu do álbum): *Mark as EPs & Singles*, *Soundtrack* ou *Live album*. Nada é adivinhado pelo título. A marca fica ligada ao `albumhash`, que depende do título e do artista da tag: se mudar esses campos, a marca se perde.
+- **Foto do artista** (lápis na foto): enviar do computador ou buscar de novo. A foto enviada é "manual" e a busca automática nunca a substitui.
+- **Save cover to files** (menu do álbum): grava a capa da pasta na tag de todas as músicas do álbum.
+- **Rename** (menu da faixa): o título, a tag e o nome do arquivo ficam iguais. Caracteres que o Windows não aceita viram `_` só no nome do arquivo. Se já existe arquivo com esse nome, nada muda.
+- **Rename artist** (lápis ao lado do nome do artista): mostra uma prévia antes. Troca só o nome certo dentro de tags com vários artistas e não mexe em `ALBUMARTIST` onde o artista é só participante. Roda em segundo plano, com barra de progresso.
+
 ## Versões
 
 O histórico de cada versão está em [`CHANGELOG.md`](CHANGELOG.md). O número fica em `version.txt` e aparece em Settings > About.
