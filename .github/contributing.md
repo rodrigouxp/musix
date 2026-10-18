@@ -65,7 +65,7 @@ git clone https://github.com/rodrigouxp/musix-webclient.git
 
 git clone git@github.com:rodrigouxp/musix-webclient.git
 
-cd musix-client
+cd musix-webclient
 yarn install
 ```
 
@@ -82,7 +82,6 @@ You can see the client at http://localhost:5173.
 
 ## Where can I go for help?
 
-If you need help, you can find users and contributors on [MUSIX Community](https://t.me/+9n61PFcgKhozZDE0) Telegram chat.
 
 ## What does the Code of Conduct mean for me?
 
