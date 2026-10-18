@@ -51,6 +51,10 @@ docker pull ghcr.io/rodrigouxp/musix:dev
 docker run --name musix -p 1970:1970 -v /caminho/da/musica:/music -v /caminho/da/config:/config --restart unless-stopped ghcr.io/rodrigouxp/musix:dev
 ```
 
+### Atualização automática (opcional)
+
+Para não precisar de `sudo docker pull` a cada versão, instale o Watchtower como um app a parte: cole [`deploy/watchtower-compose.yml`](deploy/watchtower-compose.yml) em ZimaOS > Install Custom App. Ele confere a cada 15 minutos se há imagem nova do MUSIX e recria só o container `musix` (portas e pastas continuam as mesmas). O MUSIX não faz isso sozinho porque dentro do container ele não tem acesso ao Docker.
+
 ### Opções
 
 Flags podem ser passadas ao iniciar o app no terminal (`python -m musix -h` lista todas). As principais variáveis de ambiente são `MUSIX_PORT`, `MUSIX_CONFIG_DIR` e `MUSIX_CLIENT_DIR`.

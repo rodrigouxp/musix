@@ -1,0 +1,39 @@
+# Atualiza o MUSIX sozinho (sem "sudo docker pull").
+# Cole em ZimaOS > Install Custom App > YAML (ou Import), como um app a parte.
+#
+# O Watchtower confere a cada 15 minutos se saiu uma imagem nova de
+# ghcr.io/rodrigouxp/musix:dev. Quando sai, baixa, recria o container do MUSIX
+# com as mesmas configuracoes (portas e pastas) e apaga a imagem velha.
+# So o container "musix" e vigiado: os outros apps do ZimaOS nao sao tocados.
+#
+# Importante: o Watchtower precisa do socket do Docker (/var/run/docker.sock), que
+# da controle total do Docker. Por isso ele fica num container separado e nao
+# dentro do MUSIX.
+services:
+  watchtower:
+    container_name: musix-watchtower
+    # fork mantido do containrrr/watchtower (o original parou de acompanhar o Docker novo)
+    image: nickfedor/watchtower:latest
+    restart: unless-stopped
+    command: musix
+    environment:
+      WATCHTOWER_POLL_INTERVAL: "900"
+      WATCHTOWER_CLEANUP: "true"
+      WATCHTOWER_INCLUDE_STOPPED: "false"
+      TZ: America/Sao_Paulo
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+    deploy:
+      resources:
+        limits:
+          memory: 128MB
+x-casaos:
+  architectures:
+    - amd64
+  category: Utilities
+  title:
+    custom: MUSIX Watchtower
+  tagline:
+    custom: Atualiza o MUSIX sozinho
