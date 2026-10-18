@@ -5,7 +5,6 @@ Contains all the artist(s) routes.
 import math
 import random
 from datetime import datetime, timezone
-from itertools import groupby
 from typing import Any
 
 from flask_openapi3 import APIBlueprint, Tag
@@ -17,9 +16,9 @@ from musix.api.apischemas import (
     TrackLimitSchema,
 )
 
-from musix.config import UserConfig
 from musix.db.userdata import SimilarArtistTable
 from musix.lib.sortlib import sort_tracks
+from musix.models.track import Track
 
 from musix.serializers.album import serialize_for_card_many
 from musix.serializers.artist import serialize_for_cards, serialize_for_card
@@ -140,13 +139,15 @@ def get_artist_albums(path: ArtistHashSchema, query: GetArtistAlbumsQuery):
     albums.extend(AlbumStore.get_albums_by_hashes(missing_albumhashes))
     albumdict = {a.albumhash: a for a in albums}
 
-    config = UserConfig()
-    albumgroups = groupby(tracks, key=lambda t: t.albumhash)
-    for albumhash, tracks in albumgroups:
+    tracks_by_album: dict[str, list[Track]] = {}
+    for track in tracks:
+        tracks_by_album.setdefault(track.albumhash, []).append(track)
+
+    for albumhash, album_tracks in tracks_by_album.items():
         album = albumdict.get(albumhash)
 
         if album:
-            album.check_type(list(tracks), config.showAlbumsAsSingles)
+            album.check_type(album_tracks)
 
     albums = [a for a in albumdict.values()]
     all_albums = sorted(albums, key=lambda a: a.date, reverse=True)
@@ -156,11 +157,17 @@ def get_artist_albums(path: ArtistHashSchema, query: GetArtistAlbumsQuery):
         "appearances": [],
         "compilations": [],
         "singles_and_eps": [],
+        "soundtracks": [],
+        "live_albums": [],
     }
 
     for album in all_albums:
-        if album.type == "single" or album.type == "ep":
+        if album.type == "ep":
             res["singles_and_eps"].append(album)
+        elif album.type == "soundtrack":
+            res["soundtracks"].append(album)
+        elif album.type == "live album":
+            res["live_albums"].append(album)
         elif album.type == "compilation":
             res["compilations"].append(album)
         elif (

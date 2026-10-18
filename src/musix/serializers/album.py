@@ -16,7 +16,11 @@ def album_serializer(album: Album, to_remove: set[str]) -> dict:
     for artist in album_dict["albumartists"]:
         artist.pop("image", None)
 
+    # the cards are told apart by `type`, so it stays "album"; the real type
+    # (a manual mark or "compilation") goes in `album_type`
+    album.check_type()
     album_dict["type"] = "album"
+    album_dict["album_type"] = album.type
     return album_dict
 
 

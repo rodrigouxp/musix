@@ -31,7 +31,6 @@ PUBLIC_SETTINGS = (
     "removeRemasterInfo",
     "mergeAlbums",
     "cleanAlbumTitle",
-    "showAlbumsAsSingles",
     "enablePeriodicScans",
     "scanInterval",
     "enableWatchdog",
@@ -189,8 +188,7 @@ def update_config(body: UpdateConfigBody):
         "removeRemasterInfo",
         "mergeAlbums",
         "cleanAlbumTitle",
-        "showAlbumsAsSingles",
-    }
+        }
 
     if body.key in reset_stores_lists:
         index_everything()

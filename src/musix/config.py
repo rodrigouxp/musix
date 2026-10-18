@@ -74,7 +74,6 @@ class UserConfig(metaclass=Singleton):
     # albums
     mergeAlbums: bool = False
     cleanAlbumTitle: bool = True
-    showAlbumsAsSingles: bool = False
 
     # misc
     enablePeriodicScans: bool = False

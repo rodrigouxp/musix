@@ -176,6 +176,33 @@ class SimilarArtistTable(Base):
             return similar_artist_to_dataclass(res)
 
 
+class AlbumTypeTable(Base):
+    """
+    Album types set by hand ("ep", "soundtrack" or "live album"), one per album.
+    """
+
+    __tablename__ = "album_type_override"
+
+    albumhash: Mapped[str] = mapped_column(String(), primary_key=True)
+    kind: Mapped[str] = mapped_column(String())
+
+    @classmethod
+    def get_all(cls) -> list[tuple[str, str]]:
+        with DbEngine.manager() as conn:
+            return [(r.albumhash, r.kind) for r in conn.execute(select(cls)).scalars()]
+
+    @classmethod
+    def set_kind(cls, albumhash: str, kind: str | None):
+        """
+        Saves the mark of an album, replacing the old one. ``None`` removes it.
+        """
+        with DbEngine.manager(commit=True) as conn:
+            conn.execute(delete(cls).where(cls.albumhash == albumhash))
+
+            if kind is not None:
+                conn.execute(insert(cls).values(albumhash=albumhash, kind=kind))
+
+
 class FavoritesTable(Base):
     __tablename__ = "favorite"
 

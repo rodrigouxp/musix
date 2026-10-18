@@ -2,6 +2,7 @@ import dataclasses
 from dataclasses import dataclass
 
 from musix.models.track import Track
+from musix.store.albumtypes import AlbumTypeStore
 from musix.utils.hashing import create_hash
 from musix.utils.auth import get_current_userid
 from musix.utils.parsers import get_base_title_and_versions, normalize_search_text
@@ -81,48 +82,25 @@ class Album:
 
         self.versions = [v.replace("_", " ") for v in self.versions]
 
-    def check_type(self, tracks: list[Track], singleTrackAsSingle: bool):
+    def check_type(self, tracks: list[Track] | None = None):
         """
-        Runs all the checks to determine the type of album.
+        Works out the type of the album.
+
+        Only two things set a type: a mark the user put on the album by hand
+        (see ``AlbumTypeStore``) and the compilation check. Nothing is
+        guessed from the title or from the number of tracks.
         """
-        if self.is_single(tracks, singleTrackAsSingle):
-            self.type = "single"
-            return
+        kind = AlbumTypeStore.get(self.albumhash)
 
-        if self.is_soundtrack():
-            self.type = "soundtrack"
-            return
-
-        if self.is_live_album():
-            self.type = "live album"
+        if kind:
+            self.type = kind
             return
 
         if self.is_compilation():
             self.type = "compilation"
             return
 
-        if self.is_ep():
-            self.type = "ep"
-            return
-
         self.type = "album"
-
-    def is_soundtrack(self) -> bool:
-        """
-        Checks if the album is a soundtrack.
-        """
-        title = self.og_title.lower()
-
-        keywords = ["motion picture", "soundtrack"]
-        for keyword in keywords:
-            if keyword in title:
-                return True
-
-        # if og_title ends with "the album"
-        if len(title) > 10 and title.endswith("the album"):
-            return True
-
-        return False
 
     def is_compilation(self) -> bool:
         """
@@ -155,51 +133,3 @@ class Album:
                 return True
 
         return False
-
-    def is_live_album(self):
-        """
-        Checks if the album is a live album.
-        """
-        keywords = ["live from", "live at", "live in", "live on", "mtv unplugged"]
-        for keyword in keywords:
-            if keyword in self.og_title.lower():
-                return True
-
-        return False
-
-    def is_ep(self) -> bool:
-        """
-        Checks if the album is an EP.
-        """
-        return self.title.strip().endswith(" EP")
-
-        # TODO: check against number of tracks
-
-    def is_single(self, tracks: list[Track], singleTrackAsSingle: bool):
-        """
-        Checks if the album is a single.
-        """
-        keywords = ["single version", "- single"]
-
-        # show_albums_as_singles = get_flag(SessionVarKeys.SHOW_ALBUMS_AS_SINGLES)
-
-        for keyword in keywords:
-            if keyword in self.og_title.lower():
-                return True
-
-        # REVIEW: Reading from the config file in a for loop will be slow
-        # TODO: Find a
-        if singleTrackAsSingle and self.trackcount == 1:
-            return True
-
-        if (
-            len(tracks) == 1
-            and (
-                create_hash(tracks[0].title) == create_hash(self.title)
-                or create_hash(tracks[0].title) == create_hash(self.og_title)
-            )  # if they have the same title
-            # and tracks[0].track == 1
-            # and tracks[0].disc == 1
-            # TODO: Review -> Are the above commented checks necessary?
-        ):
-            return True

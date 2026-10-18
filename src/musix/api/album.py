@@ -16,12 +16,12 @@ from musix.api.apischemas import (
 )
 
 from musix.api.auth import admin_required
-from musix.config import UserConfig
-from musix.db.userdata import SimilarArtistTable
+from musix.db.userdata import AlbumTypeTable, SimilarArtistTable
 from musix.lib.coverart import refresh_album_art
 from musix.models.album import Album
 from musix.settings import Paths
 from musix.store.albums import AlbumStore
+from musix.store.albumtypes import ALBUM_KINDS, AlbumTypeStore
 from musix.store.artists import ArtistStore
 from musix.store.tracks import TrackStore
 from musix.utils.hashing import create_hash
@@ -77,9 +77,7 @@ def get_album_tracks_and_info(body: GetAlbumInfoBody):
     tracks = TrackStore.get_tracks_by_trackhashes(albumentry.trackhashes)
     album.trackcount = len(tracks)
     album.duration = sum(t.duration for t in tracks)
-    album.check_type(
-        tracks=tracks, singleTrackAsSingle=UserConfig().showAlbumsAsSingles
-    )
+    album.check_type(tracks)
 
     track_total = sum({int(t.extra.get("track_total", 1) or 1) for t in tracks})
     avg_bitrate = sum(t.bitrate for t in tracks) // (len(tracks) or 1)
@@ -157,6 +155,41 @@ def refresh_album_cover(path: AlbumHashSchema):
     )
 
     return {"ok": True, "has_cover": has_cover}
+
+
+class AlbumTypeBody(BaseModel):
+    kind: str | None = Field(
+        None,
+        description='"ep", "soundtrack", "live album" or null to remove the mark',
+        json_schema_extra={"example": "ep"},
+    )
+
+
+@api.post("/<albumhash>/type")
+@admin_required()
+def set_album_type(path: AlbumHashSchema, body: AlbumTypeBody):
+    """
+    Mark the type of an album
+
+    An album only counts as an EP, a soundtrack or a live album when it is marked
+    by hand. One mark per album: marking again replaces the old mark and
+    ``null`` removes it.
+    """
+    entry = AlbumStore.albummap.get(path.albumhash)
+
+    if entry is None:
+        return {"error": "Album not found"}, 404
+
+    kind = body.kind
+
+    if kind is not None and kind not in ALBUM_KINDS:
+        return {"error": f"kind must be one of {', '.join(ALBUM_KINDS)} or null"}, 400
+
+    AlbumTypeTable.set_kind(path.albumhash, kind)
+    AlbumTypeStore.set(path.albumhash, kind)
+    entry.album.check_type()
+
+    return {"ok": True, "kind": kind}
 
 
 @api.post("/from-artist")

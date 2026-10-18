@@ -2,6 +2,7 @@ from typing import Iterable
 
 from musix.lib.albumslib import create_albums
 from musix.models import Album, Track
+from musix.store.albumtypes import AlbumTypeStore
 from musix.store.artists import ArtistStore
 from musix.store.tracks import TrackStore
 from musix.utils.auth import get_current_userid
@@ -46,6 +47,11 @@ class AlbumStore:
         ALBUM_LOAD_KEY = instance_key
 
         print("Loading albums... ", end="")
+
+        # imported here: the database models import the stores' models
+        from musix.db.userdata import AlbumTypeTable
+
+        AlbumTypeStore.load(AlbumTypeTable.get_all())
 
         cls.albummap = {
             album.albumhash: AlbumMapEntry(album=album, trackhashes=trackhashes)
