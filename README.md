@@ -20,6 +20,7 @@ MUSIX é um servidor de streaming de música para rodar em casa. Como um Spotify
 - **Vários usuários**
 - **Classificação manual de álbuns** - marque à mão EPs & Singles, trilhas sonoras e álbuns ao vivo (nada é adivinhado pelo título)
 - **Foto do artista** - envie uma do computador ou busque a automática de novo
+- **Editar arquivos com segurança** - renomear faixa (tag e nome do arquivo iguais) e gravar a capa nas músicas; toda escrita usa arquivo temporário e conferência, e o original só é trocado se tudo bater
 - **Capas** - a capa vem da imagem da pasta (`cover.jpg`, `folder.jpg`...) ou da arte embutida, e pode ser atualizada pelo menu do álbum ou em Settings > Library > Albums
 
 ## Instalação
