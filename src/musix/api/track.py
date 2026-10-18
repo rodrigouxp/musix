@@ -6,6 +6,8 @@ from flask_openapi3 import APIBlueprint, Tag
 from pydantic import BaseModel, Field
 
 from musix.api.apischemas import TrackHashSchema
+from musix.api.auth import admin_required
+from musix.lib.trackrename import RenameError, rename_track
 from musix.serializers.track import serialize_track
 from musix.store.tracks import TrackStore
 
@@ -49,3 +51,25 @@ def get_track_by_hash(path: TrackHashSchema, query: GetTrackQuery):
         track = base
 
     return serialize_track(track)
+
+
+class RenameTrackBody(BaseModel):
+    filepath: str = Field(description="The file to rename, as indexed")
+    title: str = Field(description="The new title. The tag and the file name become this")
+
+
+@api.post("/rename")
+@admin_required()
+def rename_track_file(body: RenameTrackBody):
+    """
+    Rename a track
+
+    The title tag and the name of the file (same folder, same extension) become the
+    title that was sent. Only the file named by ``filepath`` changes, even when
+    the same track has other files. Favorites, plays, playlists and the like follow the
+    track to its new hash.
+    """
+    try:
+        return rename_track(body.filepath, body.title)
+    except RenameError as error:
+        return {"error": error.message}, error.status

@@ -86,3 +86,59 @@ def config():
         artistSeparators={";", "/"},
         artistSplitIgnoreList={"AC/DC", "Earth, Wind & Fire"},
     )
+
+
+@pytest.fixture
+def app_env(tmp_path, monkeypatch, database):
+    """
+    Folders and settings for code that uses ``Paths()`` and ``UserConfig()``,
+    all inside the temporary folder. The real config of the user is never read.
+    """
+    from musix.config import UserConfig
+    from musix.settings import Paths, Singleton
+
+    root = tmp_path / "config"
+    thumbs = root / "images" / "thumbnails"
+    artists = root / "images" / "artists"
+    paths = SimpleNamespace(
+        config_dir=root,
+        img_path=root / "images",
+        thumbs_path=thumbs,
+        lg_thumb_path=thumbs / "large",
+        sm_thumb_path=thumbs / "small",
+        xsm_thumb_path=thumbs / "xsmall",
+        md_thumb_path=thumbs / "medium",
+        og_thumb_path=thumbs / "original",
+        artist_img_path=artists,
+        sm_artist_img_path=artists / "small",
+        md_artist_img_path=artists / "medium",
+        lg_artist_img_path=artists / "large",
+        USER_HOME_DIR=tmp_path,
+        playlist_img_path=root / "images" / "playlists",
+    )
+    for folder in (
+        paths.lg_thumb_path,
+        paths.sm_thumb_path,
+        paths.xsm_thumb_path,
+        paths.md_thumb_path,
+        paths.og_thumb_path,
+        paths.sm_artist_img_path,
+        paths.md_artist_img_path,
+        paths.lg_artist_img_path,
+    ):
+        folder.mkdir(parents=True)
+
+    config = SimpleNamespace(
+        artistSeparators={";", "/"},
+        artistSplitIgnoreList={"AC/DC"},
+        genreSeparators={"/", ";", "&"},
+        extractFeaturedArtists=True,
+        removeProdBy=True,
+        removeRemasterInfo=True,
+        cleanAlbumTitle=True,
+        mergeAlbums=False,
+        rootDirs=[str(tmp_path / "music")],
+    )
+    monkeypatch.setitem(Singleton._instances, Paths, paths)
+    monkeypatch.setitem(Singleton._instances, UserConfig, config)
+    return SimpleNamespace(paths=paths, config=config, root=tmp_path)

@@ -95,7 +95,7 @@ def artist_image_entries(name: str) -> list[tuple[Path, int | None]]:
     ]
 
 
-def _manual_marker(artisthash: str) -> Path:
+def manual_marker_path(artisthash: str) -> Path:
     return settings.Paths().artist_img_path / "manual" / artisthash
 
 
@@ -104,7 +104,7 @@ def is_manual_artist_image(artisthash: str) -> bool:
     Whether the photo of the artist was chosen by hand. The automatic
     download never replaces such a photo.
     """
-    return _manual_marker(artisthash).exists()
+    return manual_marker_path(artisthash).exists()
 
 
 def set_manual_artist_image(artisthash: str, manual: bool):
@@ -112,7 +112,7 @@ def set_manual_artist_image(artisthash: str, manual: bool):
     Saves (or removes) the "chosen by hand" mark of an artist photo.
     The mark is an empty file named after the artist hash.
     """
-    marker = _manual_marker(artisthash)
+    marker = manual_marker_path(artisthash)
 
     if manual:
         marker.parent.mkdir(parents=True, exist_ok=True)

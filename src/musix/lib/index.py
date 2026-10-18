@@ -43,19 +43,13 @@ def prepare_full_scan():
     GeneralStore.start_full_scan()
 
 
-@background
-def index_everything(full_scan: bool = False):
+def reload_stores():
     """
-    Indexes everything.
+    Loads the tracks, albums and artists from the database into memory again,
+    and maps the user data (colours, plays, favorites) onto them.
 
-    :param full_scan: Whether to perform a full scan of the root directories.
+    This is the part of ``index_everything`` that follows the reading of the files.
     """
-
-    if full_scan:
-        prepare_full_scan()
-
-    IndexTracks()
-
     key = str(time())
     TrackStore.load_all_tracks(key)
     AlbumStore.load_albums(key)
@@ -74,6 +68,21 @@ def index_everything(full_scan: bool = False):
 
     map_scrobble_data()
     map_favorites()
+
+
+@background
+def index_everything(full_scan: bool = False):
+    """
+    Indexes everything.
+
+    :param full_scan: Whether to perform a full scan of the root directories.
+    """
+
+    if full_scan:
+        prepare_full_scan()
+
+    IndexTracks()
+    reload_stores()
 
     CordinateMedia(instance_key=str(time()), overwrite_track_thumbnails=full_scan)
     GeneralStore.end_full_scan()
