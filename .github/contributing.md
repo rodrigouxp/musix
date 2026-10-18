@@ -80,9 +80,6 @@ You can see the client at http://localhost:5173.
 > [!TIP]
 > The client is configured to hook into the development server running on port `1980` (to allow the another server instance to be running on the default port).
 
-## Where can I go for help?
-
-
 ## What does the Code of Conduct mean for me?
 
 Our Code of Conduct means that you are responsible for treating everyone on the project with respect and courtesy regardless of their identity. If you are the victim of any inappropriate behavior or comments as described in our Code of Conduct, we are here for you and will do the best to ensure that the abuser is reprimanded appropriately, per our code.
