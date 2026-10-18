@@ -95,46 +95,6 @@ def login(body: LoginBody):
     return res
 
 
-pair_token = dict()
-
-
-@api.get("/getpaircode")
-def get_pair():
-    """
-    Get a new pair code to log in to thee MUSIX mobile app
-    """
-    # INFO: if user is already logged in, create a new pair code
-    token = create_new_token(get_jwt_identity())
-    key = token["accesstoken"][-6:]
-
-    global pair_token
-    pair_token = {
-        key: token,
-    }
-
-    return {"code": key}
-
-
-class PairDeviceQuery(BaseModel):
-    code: str = Field("", description="The code")
-
-
-@api.get("/pair")
-@jwt_required(optional=True)
-def pair_with_code(query: PairDeviceQuery):
-    """
-    Get an access token by sending a pair code. NOTE: A code can only be used once!
-    """
-    global pair_token
-    token = pair_token.get(query.code, None)
-
-    if token:
-        pair_token = {}
-        return token
-
-    return {"msg": "Invalid code"}, 400
-
-
 @api.post("/refresh")
 @jwt_required(refresh=True)
 def refresh():

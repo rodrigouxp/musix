@@ -133,7 +133,6 @@ def check_auth_need() -> bool:
     urls = (
         "/auth/login",
         "/auth/users",
-        "/auth/pair",
         "/auth/logout",
         "/auth/refresh",
         "/auth/profile/create",
