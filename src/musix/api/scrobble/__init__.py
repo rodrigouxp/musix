@@ -13,7 +13,6 @@ from musix.lib.recipes.recents import RecentlyPlayed
 from musix.models.album import Album
 from musix.models.stats import StatItem
 from musix.models.track import Track
-from musix.plugins.lastfm import LastFmPlugin
 from musix.serializers.artist import serialize_for_card
 from musix.serializers.album import serialize_for_card as serialize_for_album_card
 from musix.serializers.track import serialize_track, serialize_tracks
@@ -37,7 +36,6 @@ from musix.utils.stats import (
     get_artists_in_period,
     get_tracks_in_period,
 )
-from musix.utils.auth import get_current_userid
 
 
 bp_tag = Tag(name="Logger", description="Log item plays")
@@ -102,16 +100,6 @@ def log_track(body: LogTrackBody):
 
     trackentry.increment_playcount(duration, timestamp)
     track = trackentry.tracks[0]
-
-    lastfm = LastFmPlugin(current_userid=get_current_userid())
-
-    if (
-        lastfm.enabled
-        and track.duration > 30
-        and body.duration >= min(track.duration / 2, 240)
-        # SEE: https://www.last.fm/api/scrobbling#when-is-a-scrobble-a-scrobble
-    ):
-        lastfm.scrobble(trackentry.tracks[0], timestamp)
 
     return {"msg": "recorded"}, 201
 

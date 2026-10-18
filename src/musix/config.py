@@ -86,7 +86,6 @@ class UserConfig(metaclass=Singleton):
     enablePlugins: bool = True
     lastfmApiKey: str = "0553005e93f9a4b4819d835182181806"
     lastfmApiSecret: str = "5e5306fbf3e8e3bc92f039b6c6c4bd4e"
-    lastfmSessionKeys: dict[str, str] = field(default_factory=dict)
     artistArticleAwareSorting: bool = False
 
     artistSortingArticles: set[str] = field(

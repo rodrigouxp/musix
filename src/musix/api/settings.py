@@ -15,7 +15,6 @@ from musix.api.auth import admin_required
 from musix.lib.index import index_everything
 from musix.lib.populate import ProcessTrackThumbnails
 from musix.utils.paths import normalize_paths
-from musix.utils.auth import get_current_userid
 from musix.utils.threading import background
 
 # Config keys returned by GET /notsettings
@@ -120,12 +119,6 @@ def get_all_settings():
     if config["version"] == "0.0.0":
         # fallback to version.txt (useful for docker builds)
         config["version"] = open("version.txt", "r").read().strip()
-
-    # only return lastfmSessionKey for the current user
-    current_user = get_current_userid()
-    config["lastfmSessionKey"] = full_config["lastfmSessionKeys"].get(
-        str(current_user), ""
-    )
 
     return config
 
