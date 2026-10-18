@@ -8,6 +8,18 @@ A versão do MUSIX fica em [`version.txt`](version.txt) (fonte única). É o nú
 
 O cliente web (`musix-webclient`) não tem número próprio: ele é empacotado junto com o servidor na imagem Docker.
 
+## 3.3.0
+
+Renomear um artista em todos os arquivos, e atualização automática opcional.
+
+- **Rename artist** (lápis ao lado do nome, na página do artista, só admin): digite o nome novo, veja a **prévia** (quantas faixas e álbuns, faixas em que o artista só participa de álbum de outro, arquivos que serão renomeados, formatos sem suporte, conflitos de nome, arquivos sem permissão, se o nome novo já existe e os dois serão juntados) e confirme. Roda em segundo plano, arquivo por arquivo, com barra de progresso; um arquivo que falha não derruba os outros e fica com o nome antigo.
+- Regra das tags com vários artistas: a troca é **por elemento** (nunca por texto: renomear "Stones" não mexe em "Rolling Stones"), os outros nomes, a ordem e o separador ficam como estavam, e `ALBUMARTIST` só muda nos arquivos cujo `ALBUMARTIST` tem o artista. Tag que o arquivo não tinha nunca é criada. Cada arquivo é conferido depois de gravado; se algo não bate, o original fica intacto. Se o nome novo já estava na mesma tag, os dois viram um só (aparece destacado na prévia).
+- Participação só no título ("(feat. X)" ou "[ft. X]"): o título muda e o arquivo é renomeado, como no Rename de faixa.
+- Hashes do artista, dos álbuns e das faixas são trocados em favoritos, reproduções, playlists, coleções, cores, artistas parecidos, marcações de álbum, fotos do artista (inclusive a marca de foto manual) e miniaturas de capa. O artista só muda de hash se **todos** os arquivos foram gravados; se algum falhou, ele continua existindo com o nome antigo.
+- Cada arquivo gravado acrescenta uma linha em `rename-journal.jsonl` (mesmo arquivo do Rename de faixa).
+- `deploy/watchtower-compose.yml`: app opcional para o ZimaOS que atualiza o MUSIX sozinho quando sai imagem nova.
+- 3.2.1 (correção): `mutagen` faltava no `requirements.txt` e a imagem não abria.
+
 ## 3.2.0
 
 Primeira versão que **escreve nos arquivos de música**. Toda escrita passa por um helper único (`src/musix/lib/tagwriter.py`): copia o arquivo para um temporário na mesma pasta, altera a cópia, relê com mutagen e com o leitor do app (tinytag), confere que só o pedido mudou e só então troca o original (`os.replace`). Qualquer falha apaga o temporário e deixa o original intacto. Formatos: MP3, FLAC, M4A/MP4, OGG/Opus; outros dão "unsupported format" sem tocar no arquivo.
