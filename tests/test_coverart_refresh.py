@@ -6,8 +6,8 @@ from types import SimpleNamespace
 
 from PIL import Image
 
-from swingmusic.lib.coverart import album_art_needs_refresh, refresh_album_art
-from swingmusic.lib.taglib import extract_thumb
+from musix.lib.coverart import album_art_needs_refresh, refresh_album_art
+from musix.lib.taglib import extract_thumb
 
 
 def _make_paths(tmp_path: Path) -> SimpleNamespace:
@@ -109,7 +109,7 @@ def test_refresh_prefers_folder_cover_over_embedded(tmp_path: Path, monkeypatch)
     blue = io.BytesIO()
     Image.new("RGB", (16, 16), (0, 0, 255)).save(blue, "PNG")
     monkeypatch.setattr(
-        "swingmusic.lib.taglib.parse_album_art",
+        "musix.lib.taglib.parse_album_art",
         lambda filepath: blue.getvalue(),
     )
 
@@ -133,7 +133,7 @@ def test_refresh_falls_back_to_embedded_when_folder_cover_removed(
     blue = io.BytesIO()
     Image.new("RGB", (16, 16), (0, 0, 255)).save(blue, "PNG")
     monkeypatch.setattr(
-        "swingmusic.lib.taglib.parse_album_art",
+        "musix.lib.taglib.parse_album_art",
         lambda filepath: blue.getvalue(),
     )
 
@@ -160,7 +160,7 @@ def test_extract_thumb_uses_embedded_art_when_no_folder_cover(
     red = io.BytesIO()
     Image.new("RGB", (16, 16), (255, 0, 0)).save(red, "PNG")
     monkeypatch.setattr(
-        "swingmusic.lib.taglib.parse_album_art",
+        "musix.lib.taglib.parse_album_art",
         lambda filepath: red.getvalue(),
     )
 

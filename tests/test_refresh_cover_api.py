@@ -5,10 +5,10 @@ import pytest
 from flask_openapi3 import OpenAPI
 from PIL import Image
 
-from swingmusic.api import album as album_api
-from swingmusic.api import auth as auth_api
-from swingmusic.api import imgserver
-from swingmusic.store.albums import AlbumStore
+from musix.api import album as album_api
+from musix.api import auth as auth_api
+from musix.api import imgserver
+from musix.store.albums import AlbumStore
 
 ALBUMHASH = "bfe300e966abcdef"
 

@@ -2009,7 +2009,7 @@ wheels = [
 ]
 
 [[package]]
-name = "swingmusic"
+name = "musix"
 source = { editable = "." }
 dependencies = [
     { name = "asgiref" },

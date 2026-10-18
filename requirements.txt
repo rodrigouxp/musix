@@ -3,7 +3,7 @@
 annotated-types==0.7.0
     # via pydantic
 asgiref==3.11.1
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 backports-zstd==1.3.0 ; python_full_version < '3.14'
     # via flask-compress
 bidict==0.23.1
@@ -11,7 +11,7 @@ bidict==0.23.1
 blinker==1.9.0
     # via flask
 blurhash-python==1.2.2
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 brotli==1.2.0
     # via
     #   flask-compress
@@ -41,16 +41,16 @@ colorama==0.4.6 ; sys_platform == 'win32'
     #   pytest
     #   tqdm
 colorgram-py==1.2.0
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 configargparse==1.7.5
     # via locust
 cryptography==46.0.7
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 ffmpeg-python==0.2.0
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 flask==3.1.3
     # via
-    #   swingmusic (pyproject.toml)
+    #   musix (pyproject.toml)
     #   flask-compress
     #   flask-cors
     #   flask-jwt-extended
@@ -58,17 +58,17 @@ flask==3.1.3
     #   flask-openapi3
     #   locust
 flask-compress==1.24
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 flask-cors==6.0.2
     # via
-    #   swingmusic (pyproject.toml)
+    #   musix (pyproject.toml)
     #   locust
 flask-jwt-extended==4.7.1
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 flask-login==0.6.3
     # via locust
 flask-openapi3==3.0.2
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 future==1.0.0
     # via ffmpeg-python
 gevent==25.9.1
@@ -78,7 +78,7 @@ gevent==25.9.1
 geventhttpclient==2.3.9
     # via locust
 granian==2.7.3
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 greenlet==3.4.0 ; platform_machine == 'AMD64' or platform_machine == 'WIN32' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'ppc64le' or platform_machine == 'win32' or platform_machine == 'x86_64' or platform_python_implementation == 'CPython'
     # via
     #   gevent
@@ -94,29 +94,29 @@ itsdangerous==2.2.0
 jinja2==3.1.6
     # via flask
 locust==2.43.4
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 markupsafe==3.0.3
     # via
     #   flask
     #   jinja2
     #   werkzeug
 memory-profiler==0.61.0
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 msgpack==1.1.2
     # via locust
 natsort==8.4.0
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 nuitka==4.0.8
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 packaging==26.1
     # via
     #   pytest
     #   show-in-file-manager
 pendulum==3.2.0
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 pillow==12.2.0
     # via
-    #   swingmusic (pyproject.toml)
+    #   musix (pyproject.toml)
     #   blurhash-python
     #   colorgram-py
     #   pystray
@@ -124,7 +124,7 @@ pluggy==1.6.0
     # via pytest
 psutil==7.2.2
     # via
-    #   swingmusic (pyproject.toml)
+    #   musix (pyproject.toml)
     #   locust
     #   memory-profiler
 pycparser==3.0 ; implementation_name != 'PyPy'
@@ -146,7 +146,7 @@ pyobjc-framework-cocoa==12.2 ; sys_platform == 'darwin'
 pyobjc-framework-quartz==12.2 ; sys_platform == 'darwin'
     # via pystray
 pystray==0.19.5
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 pytest==9.0.3
     # via locust
 python-dateutil==2.9.0.post0
@@ -168,18 +168,18 @@ pyxdg==0.28 ; sys_platform == 'linux'
 pyzmq==27.1.0
     # via locust
 rapidfuzz==3.14.5
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 requests==2.33.1
     # via
-    #   swingmusic (pyproject.toml)
+    #   musix (pyproject.toml)
     #   locust
     #   python-socketio
 schedule==1.2.2
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 setproctitle==1.3.7
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 show-in-file-manager==1.1.6
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 simple-websocket==1.1.0
     # via python-engineio
 six==1.17.0
@@ -189,15 +189,15 @@ six==1.17.0
     #   python-dateutil
     #   python-xlib
 sortedcontainers==2.4.0
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 sqlalchemy==2.0.49
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 tabulate==0.10.0
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 tinytag==2.2.1
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 tqdm==4.67.3
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 typing-extensions==4.15.0
     # via
     #   pydantic
@@ -209,15 +209,15 @@ typing-inspection==0.4.2
 tzdata==2026.1
     # via pendulum
 unidecode==1.4.0
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 urllib3==2.6.3
     # via
     #   geventhttpclient
     #   requests
 waitress==3.0.2
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 watchdog==6.0.0
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 websocket-client==1.9.0
     # via python-socketio
 werkzeug==3.1.8
@@ -230,7 +230,7 @@ werkzeug==3.1.8
 wsproto==1.3.2
     # via simple-websocket
 xxhash==3.6.0
-    # via swingmusic (pyproject.toml)
+    # via musix (pyproject.toml)
 zope-event==6.1
     # via gevent
 zope-interface==8.3

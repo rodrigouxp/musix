@@ -1,0 +1,148 @@
+import os
+import pathlib
+from musix.db.userdata import PlaylistTable
+from musix.lib.home.recentlyadded import get_recently_added_playlist
+from musix.lib.home.recentlyplayed import get_recently_played_playlist
+from musix.models.logger import TrackLog
+from musix.store.albums import AlbumStore
+from musix.store.artists import ArtistStore
+from musix.store.tracks import TrackStore
+
+
+def create_items(entries: list[TrackLog], limit: int):
+    """
+    TODO: rework so that returns a dict with
+    {
+        "recently_played": ...,
+        "artist_mixes_for_you": ...
+    }
+    also keep in mind that the web-ui is beeing translated.
+    """
+    custom_playlists = [
+        {"name": "recentlyadded", "handler": get_recently_added_playlist},
+        {"name": "recentlyplayed", "handler": get_recently_played_playlist},
+    ]
+
+    items = []
+    added = set()
+
+    for entry in entries:
+        if len(items) >= limit:
+            break
+
+        if entry.source in added:
+            continue
+
+        added.add(entry.source)
+
+        if entry.type == "mix":
+            # mixes were a premium feature and no longer exist
+            continue
+
+        if entry.type == "album":
+            album = AlbumStore.albummap.get(entry.type_src)
+
+            if album is None:
+                continue
+
+            item = {
+                "type": "album",
+                "hash": entry.type_src,
+                "timestamp": entry.timestamp,
+            }
+
+            items.append(item)
+            continue
+
+        if entry.type == "artist":
+            artist = ArtistStore.artistmap.get(entry.type_src)
+
+            if artist is None:
+                continue
+
+            items.append(
+                {
+                    "type": "artist",
+                    "hash": entry.type_src,
+                    "timestamp": entry.timestamp,
+                }
+            )
+
+            continue
+
+        if entry.type == "folder":
+            folder = entry.type_src
+
+            if not folder:
+                continue
+
+            if not folder.endswith("/"):
+                folder += "/"
+
+            is_home_dir = entry.type_src == "$home"
+
+            if is_home_dir:
+                folder = os.path.expanduser("~")
+
+            if not pathlib.Path(folder).exists():
+                continue
+
+            item = {
+                "type": "folder",
+                "hash": folder,
+                "timestamp": entry.timestamp,
+            }
+
+            items.append(item)
+            continue
+
+        if entry.type == "playlist":
+            is_custom = entry.type_src in [i["name"] for i in custom_playlists]
+
+            if is_custom:
+                items.append(
+                    {
+                        "type": "playlist",
+                        "hash": entry.type_src,
+                        "timestamp": entry.timestamp,
+                        "is_custom": True,
+                    }
+                )
+                continue
+
+            playlist = PlaylistTable.get_by_id(entry.type_src)
+            if playlist is None:
+                continue
+
+            item = {
+                "type": "playlist",
+                "hash": entry.type_src,
+                "timestamp": entry.timestamp,
+            }
+
+            items.append(item)
+            continue
+
+        if entry.type == "favorite":
+            items.append(
+                {
+                    "type": "favorite",
+                    "hash": "favorite",
+                    "timestamp": entry.timestamp,
+                }
+            )
+            continue
+
+        t = TrackStore.trackhashmap.get(entry.trackhash)
+
+        if t is None:
+            continue
+
+        item = {
+            "type": "track",
+            "hash": entry.trackhash,
+            "timestamp": entry.timestamp,
+        }
+        items.append(item)
+
+    return items

@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 from PIL import Image
 
-from swingmusic.lib.coverart import (
+from musix.lib.coverart import (
     IMAGE_EXTENSIONS,
     is_library_image,
     library_watch_patterns,

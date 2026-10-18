@@ -512,7 +512,7 @@ create_virtual_environment() {
     local python_cmd
     
     install_dir=$(get_install_dir)
-    venv_dir="$install_dir/swingmusic-venv"
+    venv_dir="$install_dir/musix-venv"
     python_cmd=$(check_python_version || true)
 
     if [ -z "$python_cmd" ]; then
@@ -544,7 +544,7 @@ create_virtual_environment() {
     printf '%s' "$venv_dir"
 }
 
-# Create wrapper script to make swingmusic command accessible
+# Create wrapper script to make musix command accessible
 create_wrapper_script() {
     local install_dir
     local venv_dir
@@ -552,21 +552,21 @@ create_wrapper_script() {
     
     install_dir=$(get_install_dir)
     venv_dir="$1"
-    wrapper_script="$install_dir/swingmusic"
+    wrapper_script="$install_dir/musix"
     
     say "Creating wrapper script in $install_dir..."
     
     # Create wrapper script
     cat > "$wrapper_script" << 'EOF'
 #!/bin/sh
-# Swing Music wrapper script
-# This script activates the virtual environment and runs swingmusic
+# MUSIX wrapper script
+# This script activates the virtual environment and runs musix
 
 set -e
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-VENV_DIR="$SCRIPT_DIR/swingmusic-venv"
+VENV_DIR="$SCRIPT_DIR/musix-venv"
 
 # Check if virtual environment exists
 if [ ! -f "$VENV_DIR/bin/activate" ]; then
@@ -579,65 +579,65 @@ fi
 
 # Handle --upgrade flag
 if [ "$1" = "--upgrade" ]; then
-    echo "Swing Music Upgrade"
+    echo "MUSIX Upgrade"
     echo "==================="
     echo ""
 
     # Show current version
-    CURRENT_VERSION=$(python -P -m swingmusic --version 2>/dev/null | head -n1)
+    CURRENT_VERSION=$(python -P -m musix --version 2>/dev/null | head -n1)
     echo "Current version: $CURRENT_VERSION"
     echo ""
 
     # Preview the version pip will resolve before committing to the upgrade.
-    # --only-binary swingmusic forces a wheel match: if no compatible wheel
+    # --only-binary musix forces a wheel match: if no compatible wheel
     # exists for this interpreter/platform, pip fails here instead of silently
     # downgrading to an older version that happens to have an sdist.
     # `pip index versions` hits only the PyPI JSON API — no wheel downloads.
     echo "Resolving available version..."
-    RESOLVED=$(pip index versions swingmusic --disable-pip-version-check 2>/dev/null \
+    RESOLVED=$(pip index versions musix --disable-pip-version-check 2>/dev/null \
         | head -n1 \
-        | sed -nE 's/^swingmusic \(([^)]+)\).*/swingmusic-\1/p' || true)
+        | sed -nE 's/^musix \(([^)]+)\).*/musix-\1/p' || true)
     if [ -n "$RESOLVED" ]; then
         echo "Will upgrade to: $RESOLVED"
     fi
     echo ""
 
     # Perform upgrade
-    echo "Upgrading Swing Music and dependencies..."
-    if ! pip install --upgrade swingmusic --only-binary swingmusic --disable-pip-version-check; then
+    echo "Upgrading MUSIX and dependencies..."
+    if ! pip install --upgrade musix --only-binary musix --disable-pip-version-check; then
         echo "Error: Upgrade failed" >&2
         exit 1
     fi
     echo ""
 
     # Show new version
-    NEW_VERSION=$(python -P -m swingmusic --version 2>/dev/null | head -n1)
+    NEW_VERSION=$(python -P -m musix --version 2>/dev/null | head -n1)
     echo "Successfully upgraded to: $NEW_VERSION"
     echo ""
 
     # Detect OS and restart service
     OS_TYPE=$(uname -s)
-    echo "Restarting Swing Music service..."
+    echo "Restarting MUSIX service..."
 
     case "$OS_TYPE" in
         "Darwin")
             # macOS - use launchctl
-            if launchctl kickstart -k "gui/$(id -u)/com.swingmusic" 2>/dev/null; then
+            if launchctl kickstart -k "gui/$(id -u)/com.musix" 2>/dev/null; then
                 echo "Service restarted successfully (macOS)"
-            elif launchctl stop com.swingmusic 2>/dev/null && launchctl start com.swingmusic 2>/dev/null; then
+            elif launchctl stop com.musix 2>/dev/null && launchctl start com.musix 2>/dev/null; then
                 echo "Service restarted successfully (macOS)"
             else
                 echo "Warning: Could not restart service automatically" >&2
-                echo "Please restart manually: launchctl restart com.swingmusic" >&2
+                echo "Please restart manually: launchctl restart com.musix" >&2
             fi
             ;;
         "Linux")
             # Linux - use systemctl
-            if systemctl --user restart swingmusic.service 2>/dev/null; then
+            if systemctl --user restart musix.service 2>/dev/null; then
                 echo "Service restarted successfully (Linux)"
             else
                 echo "Warning: Could not restart service automatically" >&2
-                echo "Please restart manually: systemctl --user restart swingmusic" >&2
+                echo "Please restart manually: systemctl --user restart musix" >&2
             fi
             ;;
         *)
@@ -651,8 +651,8 @@ if [ "$1" = "--upgrade" ]; then
     exit 0
 fi
 
-# Run swingmusic with all arguments (normal operation).
-exec python -P -m swingmusic "$@"
+# Run musix with all arguments (normal operation).
+exec python -P -m musix "$@"
 EOF
     
     # Make wrapper script executable
@@ -662,14 +662,14 @@ EOF
     printf '%s' "$wrapper_script"
 }
 
-install_swingmusic() {
+install_musix() {
     local venv_dir
     local python_cmd
     local pip_cmd
     
     venv_dir="$1"
     
-    say_verbose "Installing Swing Music in virtual environment..."
+    say_verbose "Installing MUSIX in virtual environment..."
     say_verbose "Virtual environment: $venv_dir"
 
     # Get Python and pip commands from virtual environment
@@ -687,73 +687,73 @@ install_swingmusic() {
 
     
     # Preview the version pip will resolve before committing to the install.
-    # --only-binary swingmusic forces a wheel match: if no compatible wheel exists
+    # --only-binary musix forces a wheel match: if no compatible wheel exists
     # for this interpreter/platform, pip fails here instead of silently
     # downgrading to an older version that happens to have an sdist.
     # `pip index versions` hits only the PyPI JSON API and filters by
     # interpreter compatibility — no wheel downloads, no resolver work.
-    # First line is "swingmusic (X.Y.Z)" where X.Y.Z is the best candidate.
-    say "Resolving Swing Music version..."
+    # First line is "musix (X.Y.Z)" where X.Y.Z is the best candidate.
+    say "Resolving MUSIX version..."
     local resolved
-    resolved=$("$pip_cmd" index versions swingmusic --disable-pip-version-check 2>/dev/null \
+    resolved=$("$pip_cmd" index versions musix --disable-pip-version-check 2>/dev/null \
         | head -n1 \
-        | sed -nE 's/^swingmusic \(([^)]+)\).*/swingmusic-\1/p' || true)
+        | sed -nE 's/^musix \(([^)]+)\).*/musix-\1/p' || true)
     if [ -n "$resolved" ]; then
         say "Will install: $resolved"
     else
         say_verbose "Could not preview version"
     fi
 
-    # Install Swing Music
-    say "Installing Swing Music. This may take a while..."
-    ensure "$pip_cmd" install swingmusic --only-binary swingmusic --disable-pip-version-check --quiet
+    # Install MUSIX
+    say "Installing MUSIX. This may take a while..."
+    ensure "$pip_cmd" install musix --only-binary musix --disable-pip-version-check --quiet
 
     # Verify installation
     say "Verifying installation..."
     local verify_output
-    if ! verify_output=$("$python_cmd" -P -m swingmusic --version 2>&1); then
+    if ! verify_output=$("$python_cmd" -P -m musix --version 2>&1); then
         printf '%s\n' "$verify_output" >&2
-        err "Failed to verify Swing Music installation"
+        err "Failed to verify MUSIX installation"
     fi
 
     local version
     version=$(printf '%s' "$verify_output" | head -n1)
-    say "Swing Music installed successfully: $version"
+    say "MUSIX installed successfully: $version"
 }
 
-# Kill all Swing Music processes
-kill_swingmusic_processes() {
-    say "Stopping Swing Music processes..."
-    say_verbose "Searching for running Swing Music processes"
+# Kill all MUSIX processes
+kill_musix_processes() {
+    say "Stopping MUSIX processes..."
+    say_verbose "Searching for running MUSIX processes"
 
-    # Find and kill all Swing Music processes
+    # Find and kill all MUSIX processes
     local killed_count=0
 
-    # Use pkill to find and kill processes matching "swingmusic "
+    # Use pkill to find and kill processes matching "musix "
     if command -v pkill >/dev/null 2>&1; then
         say_verbose "Using pkill to find and kill processes"
         # Count processes before killing
         if command -v pgrep >/dev/null 2>&1; then
-            killed_count=$(pgrep -f "swingmusic " 2>/dev/null | wc -l) || killed_count=0
-            say_verbose "Found $killed_count Swing Music processes"
+            killed_count=$(pgrep -f "musix " 2>/dev/null | wc -l) || killed_count=0
+            say_verbose "Found $killed_count MUSIX processes"
         fi
 
-        # Kill all Swing Music processes
-        if pkill -9 -f "swingmusic " >/dev/null 2>&1; then
+        # Kill all MUSIX processes
+        if pkill -9 -f "musix " >/dev/null 2>&1; then
             if [ "$killed_count" -gt 0 ]; then
-                say "Killed $killed_count Swing Music process(es)"
+                say "Killed $killed_count MUSIX process(es)"
                 say_verbose "Successfully killed processes using SIGKILL"
             else
-                say "No Swing Music processes found"
+                say "No MUSIX processes found"
             fi
         else
-            say "No Swing Music processes found"
+            say "No MUSIX processes found"
         fi
     else
         say_verbose "pkill not available, using ps and kill fallback"
         # Fallback: use ps and kill manually
         local pids
-        pids=$(ps aux | grep "swingmusic " | grep -v grep | awk '{print $2}')
+        pids=$(ps aux | grep "musix " | grep -v grep | awk '{print $2}')
 
         if [ -n "$pids" ]; then
             killed_count=$(echo "$pids" | wc -w)
@@ -762,9 +762,9 @@ kill_swingmusic_processes() {
                 say_verbose "Killing process $pid"
                 kill -9 "$pid" >/dev/null 2>&1
             done
-            say "Killed $killed_count Swing Music process(es)"
+            say "Killed $killed_count MUSIX process(es)"
         else
-            say "No Swing Music processes found"
+            say "No MUSIX processes found"
         fi
     fi
 }
@@ -772,7 +772,7 @@ kill_swingmusic_processes() {
 # Remove systemd service
 remove_systemd_service() {
     local service_dir="$HOME/.config/systemd/user"
-    local service_file="$service_dir/swingmusic.service"
+    local service_file="$service_dir/musix.service"
 
     say "Removing systemd service..."
     say_verbose "Service directory: $service_dir"
@@ -786,14 +786,14 @@ remove_systemd_service() {
     fi
 
     # Stop the service
-    say_verbose "Stopping systemd service: swingmusic.service"
-    systemctl --user stop swingmusic.service >/dev/null 2>&1
-    say "Stopped Swing Music service"
+    say_verbose "Stopping systemd service: musix.service"
+    systemctl --user stop musix.service >/dev/null 2>&1
+    say "Stopped MUSIX service"
 
     # Disable the service
-    say_verbose "Disabling systemd service: swingmusic.service"
-    systemctl --user disable swingmusic.service >/dev/null 2>&1
-    say "Disabled Swing Music service"
+    say_verbose "Disabling systemd service: musix.service"
+    systemctl --user disable musix.service >/dev/null 2>&1
+    say "Disabled MUSIX service"
 
     # Remove service file
     if [ -f "$service_file" ]; then
@@ -816,7 +816,7 @@ remove_systemd_service() {
 # Remove launchd service
 remove_launchd_service() {
     local service_dir="$HOME/Library/LaunchAgents"
-    local service_file="$service_dir/com.swingmusic.plist"
+    local service_file="$service_dir/com.musix.plist"
 
     say "Removing launchd service..."
     say_verbose "Service directory: $service_dir"
@@ -830,14 +830,14 @@ remove_launchd_service() {
     fi
 
     # Stop the service
-    say_verbose "Stopping launchd service: com.swingmusic"
-    launchctl stop com.swingmusic >/dev/null 2>&1 || true
-    say "Stopped Swing Music service"
+    say_verbose "Stopping launchd service: com.musix"
+    launchctl stop com.musix >/dev/null 2>&1 || true
+    say "Stopped MUSIX service"
 
     # Unload the service
     say_verbose "Unloading launchd service: $service_file"
     launchctl unload "$service_file" >/dev/null 2>&1 || true
-    say "Unloaded Swing Music service"
+    say "Unloaded MUSIX service"
 
     # Remove service file
     if [ -f "$service_file" ]; then
@@ -859,7 +859,7 @@ remove_wrapper_script() {
     local wrapper_script
 
     install_dir=$(get_install_dir)
-    wrapper_script="$install_dir/swingmusic"
+    wrapper_script="$install_dir/musix"
 
     say "Removing wrapper script..."
     say_verbose "Install directory: $install_dir"
@@ -884,7 +884,7 @@ remove_virtual_environment() {
     local venv_dir
 
     install_dir=$(get_install_dir)
-    venv_dir="$install_dir/swingmusic-venv"
+    venv_dir="$install_dir/musix-venv"
 
     say "Removing virtual environment..."
     say_verbose "Install directory: $install_dir"
@@ -905,7 +905,7 @@ remove_virtual_environment() {
 
 # Main uninstall function
 uninstall() {
-    say "Starting Swing Music uninstallation..."
+    say "Starting MUSIX uninstallation..."
     say_verbose "Uninstall mode activated"
     say_verbose "OS type: $(get_os_type)"
     say ""
@@ -930,15 +930,15 @@ uninstall() {
             ;;
     esac
 
-    # Kill any remaining Swing Music processes
-    kill_swingmusic_processes
+    # Kill any remaining MUSIX processes
+    kill_musix_processes
 
     # Remove application files
     remove_wrapper_script
     remove_virtual_environment
 
     say ""
-    say "Swing Music uninstalled successfully!"
+    say "MUSIX uninstalled successfully!"
     say_verbose "Uninstallation process completed"
 }
 
@@ -957,9 +957,9 @@ test_installation() {
         err "Wrapper script is not executable"
     fi
     
-    # Test swingmusic command
+    # Test musix command
     if ! "$wrapper_script" --version >/dev/null 2>&1; then
-        err "Swing Music command failed"
+        err "MUSIX command failed"
     fi
     
     local version
@@ -967,10 +967,10 @@ test_installation() {
     say "Installation test successful: $version"
     
     # Test which command
-    if ! command -v swingmusic >/dev/null 2>&1; then
-        warn "swingmusic command not found in PATH (may need to restart shell)"
+    if ! command -v musix >/dev/null 2>&1; then
+        warn "musix command not found in PATH (may need to restart shell)"
     else
-        say "swingmusic command is available in PATH"
+        say "musix command is available in PATH"
     fi
 }
 
@@ -984,9 +984,9 @@ create_systemd_service() {
     venv_dir="$1"
     install_dir=$(get_install_dir)
     service_dir="$HOME/.config/systemd/user"
-    service_file="$service_dir/swingmusic.service"
+    service_file="$service_dir/musix.service"
     
-    say "Creating systemd service for Swing Music..."
+    say "Creating systemd service for MUSIX..."
     
     # Check if systemd is available
     if ! command -v systemctl >/dev/null 2>&1; then
@@ -1000,14 +1000,14 @@ create_systemd_service() {
     # Create service file
     cat > "$service_file" << EOF
 [Unit]
-Description=Swing Music Server
+Description=MUSIX Server
 After=network.target
 
 [Service]
 Type=simple
 WorkingDirectory=$install_dir
 Environment=PATH=$venv_dir/bin:/usr/local/bin:/usr/bin:/bin
-ExecStart=$venv_dir/bin/python -P -m swingmusic
+ExecStart=$venv_dir/bin/python -P -m musix
 Restart=always
 RestartSec=10
 
@@ -1019,27 +1019,27 @@ EOF
     say_verbose "Reloading systemd user daemon..."
     ensure systemctl --user daemon-reload
     
-    say_verbose "Enabling Swing Music service..."
-    ensure systemctl --user enable swingmusic.service
+    say_verbose "Enabling MUSIX service..."
+    ensure systemctl --user enable musix.service
 
-    say_verbose "Starting Swing Music service..."
-    ensure systemctl --user start swingmusic.service
+    say_verbose "Starting MUSIX service..."
+    ensure systemctl --user start musix.service
 
     say "Systemd service created, enabled, and started successfully"
     say "Service file: $service_file"
     say ""
     say "Service Management Commands:"
-    say "To start Swing Music service:"
-    say "    systemctl --user start swingmusic"
+    say "To start MUSIX service:"
+    say "    systemctl --user start musix"
     say ""
-    say "To stop Swing Music service:"
-    say "    systemctl --user stop swingmusic"
+    say "To stop MUSIX service:"
+    say "    systemctl --user stop musix"
     say ""
     say "To check service status:"
-    say "    systemctl --user status swingmusic"
+    say "    systemctl --user status musix"
     say ""
     say "To view service logs:"
-    say "    journalctl --user -u swingmusic -f"
+    say "    journalctl --user -u musix -f"
 }
 
 create_launchd_service() {
@@ -1051,9 +1051,9 @@ create_launchd_service() {
     venv_dir="$1"
     install_dir=$(get_install_dir)
     service_dir="$HOME/Library/LaunchAgents"
-    service_file="$service_dir/com.swingmusic.plist"
+    service_file="$service_dir/com.musix.plist"
     
-    say "Creating launchd service for Swing Music..."
+    say "Creating launchd service for MUSIX..."
     
     # Create service directory
     ensure mkdir -p "$service_dir"
@@ -1065,47 +1065,47 @@ create_launchd_service() {
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.swingmusic</string>
+    <string>com.musix</string>
     <key>Program</key>
-    <string>$install_dir/swingmusic</string>
+    <string>$install_dir/musix</string>
     <key>ProgramArguments</key>
     <array>
-        <string>$install_dir/swingmusic</string>
+        <string>$install_dir/musix</string>
     </array>
     <key>WorkingDirectory</key>
     <string>$install_dir</string>
     <key>RunAtLoad</key>
     <true/>
     <key>StandardOutPath</key>
-    <string>/tmp/swingmusic.log</string>
+    <string>/tmp/musix.log</string>
     <key>StandardErrorPath</key>
-    <string>/tmp/swingmusic.error.log</string>
+    <string>/tmp/musix.error.log</string>
 </dict>
 </plist>
 EOF
     
     # Load the service
-    say_verbose "Loading Swing Music service..."
+    say_verbose "Loading MUSIX service..."
     ensure launchctl load "$service_file"
     
     say "Launchd service created and loaded successfully"
     say "Service file: $service_file"
     say ""
     say "Service Management Commands:"
-    say "To start Swing Music service:"
-    say "    launchctl start com.swingmusic"
+    say "To start MUSIX service:"
+    say "    launchctl start com.musix"
     say ""
-    say "To stop Swing Music service:"
-    say "    launchctl stop com.swingmusic"
+    say "To stop MUSIX service:"
+    say "    launchctl stop com.musix"
     say ""
     say "To check if service is running:"
-    say "    launchctl list | grep swingmusic"
+    say "    launchctl list | grep musix"
     say ""
     say "To view service logs:"
-    say "    tail -f /tmp/swingmusic.log"
+    say "    tail -f /tmp/musix.log"
 }
 
-# Add swingmusic command to user's PATH
+# Add musix command to user's PATH
 add_to_path() {
     local install_dir
     local shell_rc
@@ -1113,7 +1113,7 @@ add_to_path() {
     
     install_dir=$(get_install_dir)
     
-    say "Adding Swing Music to PATH..."
+    say "Adding MUSIX to PATH..."
     say_verbose "Installation directory: $install_dir"
     
     # Detect user's shell and appropriate rc file
@@ -1137,9 +1137,9 @@ add_to_path() {
     
     say_verbose "Using shell configuration file: $shell_rc"
     
-    # Check if Swing Music path already exists in rc file
+    # Check if MUSIX path already exists in rc file
     if [ -f "$shell_rc" ] && grep -q "$install_dir" "$shell_rc"; then
-        say "Swing Music PATH already configured in $shell_rc"
+        say "MUSIX PATH already configured in $shell_rc"
         return 0
     fi
     
@@ -1151,10 +1151,10 @@ add_to_path() {
     # Add path to rc file
     path_line="export PATH=\"$install_dir:\$PATH\""
     echo "" >> "$shell_rc"
-    echo "# Swing Music installation" >> "$shell_rc"
+    echo "# MUSIX installation" >> "$shell_rc"
     echo "$path_line" >> "$shell_rc"
     
-    say "Added Swing Music to PATH in $shell_rc"
+    say "Added MUSIX to PATH in $shell_rc"
     say "Please restart your shell or run: source $shell_rc"
     
     # Also add to current session PATH
@@ -1167,7 +1167,7 @@ main() {
     local venv_dir
     local wrapper_script
     
-    say "Starting Swing Music installation..."
+    say "Starting MUSIX installation..."
     say_verbose "Architecture: $(get_architecture)"
     say_verbose "OS Type: $(get_os_type)"
     say_verbose "Package Manager: $(get_package_manager)"
@@ -1183,8 +1183,8 @@ main() {
     # Create virtual environment
     venv_dir=$(create_virtual_environment)
     
-    # Install Swing Music
-    install_swingmusic "$venv_dir"
+    # Install MUSIX
+    install_musix "$venv_dir"
     
     # Create wrapper script
     wrapper_script=$(create_wrapper_script "$venv_dir")
@@ -1213,10 +1213,10 @@ main() {
     say "Installation directory: $venv_dir"
     say ""
     say "Installation completed successfully! 🎉"
-    say "Open http://localhost:1970 in your browser to start using Swing Music"
+    say "Open http://localhost:1970 in your browser to start using MUSIX"
     say ""
-    say "To uninstall Swing Music, run:"
-    say "    curl -fsSL https://setup.swingmx.com | bash -s -- --uninstall"
+    say "To uninstall MUSIX, run:"
+    say "    $0 --uninstall"
 }
 
 # Show usage information
@@ -1224,13 +1224,13 @@ usage() {
     cat << EOF
 Usage: $0 [OPTIONS]
 
-Install or uninstall Swing Music on Unix-based systems.
+Install or uninstall MUSIX on Unix-based systems.
 
 OPTIONS:
     -v, --verbose      Enable verbose output
     -q, --quiet        Suppress normal output
     -h, --help         Show this help message
-    --uninstall        Uninstall Swing Music and remove all files
+    --uninstall        Uninstall MUSIX and remove all files
 
 ENVIRONMENT VARIABLES:
     VERBOSE=1          Enable verbose output
@@ -1239,7 +1239,7 @@ ENVIRONMENT VARIABLES:
 EXAMPLES:
     $0                      # Normal installation
     $0 --verbose           # Verbose installation
-    $0 --uninstall        # Uninstall Swing Music
+    $0 --uninstall        # Uninstall MUSIX
     VERBOSE=1 $0          # Verbose installation via environment
 
 EOF

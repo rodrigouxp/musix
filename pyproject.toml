@@ -3,8 +3,8 @@ requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "swingmusic"
-description = "Swing Music"
+name = "musix"
+description = "MUSIX"
 readme = "README.md"
 requires-python = ">=3.11"
 dynamic = ["version"]
@@ -61,14 +61,14 @@ dependency-metadata = [
 ]
 
 [project.scripts]
-swingmusic = "swingmusic.__main__:run"
+musix = "musix.__main__:run"
 
 
 [project.urls]
-Homepage = "https://swingmx.com/"
-Repository = "https://github.com/swingmx/swingmusic"
-Documentation = "https://swingmx.com/guide/introduction.html"
-Issues = "https://github.com/swingmx/swingmusic/issues"
+Homepage = "https://github.com/rodrigouxp/musix"
+Repository = "https://github.com/rodrigouxp/musix"
+Documentation = "https://github.com/rodrigouxp/musix#readme"
+Issues = "https://github.com/rodrigouxp/musix/issues"
 
 
 [tool.setuptools.packages.find]

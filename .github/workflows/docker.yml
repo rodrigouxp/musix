@@ -16,7 +16,7 @@ permissions:
   packages: write
 
 env:
-  CLIENT_REPO: rodrigouxp/swingmusic-webclient
+  CLIENT_REPO: rodrigouxp/musix-webclient
 
 jobs:
   image:

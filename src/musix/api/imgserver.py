@@ -1,0 +1,233 @@
+from pathlib import Path
+from flask_openapi3 import Tag
+from flask_openapi3 import APIBlueprint
+from pydantic import BaseModel, Field
+from flask import Response, send_from_directory
+
+from musix.lib.coverart import find_best_cover
+from musix.settings import Defaults, Paths
+from musix.store.albums import AlbumStore
+from musix.store.tracks import TrackStore
+from musix.utils.threading import background
+from PIL import Image
+
+bp_tag = Tag(
+    name="Images", description="Image filenames are constructured as '{itemhash}.webp'"
+)
+api = APIBlueprint("imgserver", __name__, url_prefix="/img", abp_tags=[bp_tag])
+
+
+@background
+def cache_thumbnails(filepath: Path, trackhash: str):
+    """
+    Resizes the image and stores it in the cache directory.
+    """
+    image = Image.open(filepath)
+    path = Path(Paths().image_cache_path)
+    aspect_ratio = image.width / image.height
+
+    sizes = {
+        "xsmall": 64,
+        "small": 96,
+        "medium": 256,
+        "large": 512,
+    }
+
+    for size, width in sizes.items():
+        width = min(width, image.width)
+        height = int(width / aspect_ratio)
+
+        resized_path = path / size / (trackhash + ".webp")
+        resized_path.parent.mkdir(parents=True, exist_ok=True)
+        image.resize((width, height)).save(resized_path, format="webp")
+
+
+def find_thumbnail(albumhash: str, pathhash: str):
+    # entry = TrackStore.trackhashmap.get(albumhash)
+    entry = AlbumStore.albummap.get(albumhash)
+
+    if entry is None:
+        return None, None, ""
+
+    track_file = None
+
+    tracks = TrackStore.get_tracks_by_trackhashes(entry.trackhashes)
+    for track in tracks:
+        if track.pathhash == pathhash:
+            track_file = track
+            break
+
+    if track_file is None:
+        return None, None, ""
+
+    folder = Path(track_file.folder)
+    image = find_best_cover(folder)
+
+    if image is None:
+        return None, None, ""
+
+    return image.parent, image.name, track_file.albumhash
+
+
+def no_cache(response):
+    """
+    Makes the browser revalidate (ETag / Last-Modified) on every request,
+    so a rebuilt cover shows up without a hard refresh.
+    """
+    if isinstance(response, Response):
+        response.headers["Cache-Control"] = "no-cache"
+
+    return response
+
+
+def send_fallback_img(filename: str = "default.webp"):
+    """
+    Returns the fallback image from the assets folder.
+    """
+    folder = Paths().assets_path
+    img = Path(folder) / filename
+
+    if not img.exists():
+        return "", 404
+
+    return send_from_directory(folder, filename)
+
+
+def send_file_or_fallback(
+    folder: str, filename: str, fallback: str = "default.webp", pathhash: str = ""
+):
+    """
+    Returns the file from the folder or the fallback image.
+    """
+    fpath = Path(folder) / filename
+
+    if fpath.exists():
+        return send_from_directory(folder, filename)
+
+    if pathhash != "":
+        # INFO: Check if the image is in the cache
+        cache_path = Paths().image_cache_path / fpath.parent.name / filename
+        if cache_path.exists():
+            return send_from_directory(cache_path.parent, cache_path.name)
+
+        # INFO: Find the thumbnail
+        parent, file, albumhash = find_thumbnail(
+            filename.replace(".webp", ""), pathhash
+        )
+
+        # INFO: Cache  and send the thumbnail
+        if file is not None and parent is not None:
+            # cache_thumbnails(parent / file, albumhash)
+            return send_from_directory(parent, file)
+
+    return send_fallback_img(fallback)
+
+
+class ImagePath(BaseModel):
+    imgpath: str = Field(
+        description="The image filename",
+        example=Defaults.API_ALBUMHASH + ".webp",
+    )
+    size: str = Field(
+        default="large",
+        description="The size of the image",
+        example="large",
+        enum=["large", "xsmall", "small", "medium", "original"],
+    )
+
+
+class ImageQuery(BaseModel):
+    pathhash: str = Field(
+        description="The path hash used to find the thumbnail",
+        default="",
+    )
+
+
+# @api.get("/t/o/<imgpath>")
+# def send_original_thumbnail(path: ImagePath):
+#     """
+#     Get original thumbnail
+#     """
+#     folder = Paths.get_original_thumb_path()
+#     fpath = Path(folder) / path.imgpath
+
+#     if fpath.exists():
+#         return send_from_directory(folder, path.imgpath)
+
+#     return send_fallback_img()
+
+
+# TRACK THUMBNAILS
+_THUMBNAIL_FOLDERS = {
+    "large": lambda: Paths().lg_thumb_path,
+    "xsmall": lambda: Paths().xsm_thumb_path,
+    "small": lambda: Paths().sm_thumb_path,
+    "medium": lambda: Paths().md_thumb_path,
+    "original": lambda: Paths().og_thumb_path,
+}
+
+
+@api.get("/thumbnail/<imgpath>")
+@api.get("/thumbnail/<size>/<imgpath>")
+def send_thumbnail(path: ImagePath, query: ImageQuery):
+    """
+    Get thumbnail image
+
+    Size options: large (500x500), xsmall (64px), small (96px), medium (256px)
+    """
+    size = path.size
+    if size not in _THUMBNAIL_FOLDERS:
+        size = "large"
+
+    folder = _THUMBNAIL_FOLDERS[size]()
+    return no_cache(
+        send_file_or_fallback(str(folder), path.imgpath, pathhash=query.pathhash)
+    )
+
+
+# ARTISTS
+@api.get("/artist/<imgpath>")
+def send_lg_artist_image(path: ImagePath):
+    """
+    Get large artist image (500 x 500)
+    """
+    folder = Paths().lg_artist_img_path
+    return send_file_or_fallback(str(folder), path.imgpath, "artist.webp")
+
+
+@api.get("/artist/small/<imgpath>")
+def send_sm_artist_image(path: ImagePath):
+    """
+    Get small artist image (128)
+    """
+    folder = Paths().sm_artist_img_path
+    return send_file_or_fallback(str(folder), path.imgpath, "artist.webp")
+
+
+@api.get("/artist/medium/<imgpath>")
+def send_md_artist_image(path: ImagePath):
+    """
+    Get medium artist image (256px)
+    """
+    folder = Paths().md_artist_img_path
+    return send_file_or_fallback(folder, path.imgpath, "artist.webp")
+
+
+# PLAYLISTS
+class PlaylistImagePath(BaseModel):
+    imgpath: str = Field(
+        description="The image path",
+        example="1.webp",
+    )
+
+
+@api.get("/playlist/<imgpath>")
+def send_playlist_image(path: PlaylistImagePath):
+    """
+    Get playlist image
+
+    Images are constructed as '{playlist_id}.webp'
+    """
+    folder = Paths().playlist_img_path
+    return send_file_or_fallback(folder, path.imgpath, "playlist.svg")
+

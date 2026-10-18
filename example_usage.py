@@ -1,6 +1,6 @@
 # Example usage of the Events system
 
-from swingmusic.events import events
+from musix.events import events
 import time
 import threading
 

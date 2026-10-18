@@ -1,14 +1,14 @@
 # syntax=docker/dockerfile:1.6
 #
-# Imagem do player (fork do Swing Music) para o homelab.
+# Imagem do player (fork do MUSIX) para o homelab.
 # Contexto de build: raiz deste repo + o repo do cliente clonado em ./client-src
-#   git clone https://github.com/rodrigouxp/swingmusic-webclient client-src
-#   docker build -t swingmusic-dev .
+#   git clone https://github.com/rodrigouxp/musix-webclient client-src
+#   docker build -t musix .
 #
 # A versao vem de version.txt (fonte unica): serve de metadado do pacote e
-# tambem vai para <cliente>/version.txt. Isso e OBRIGATORIO: a cada boot o
-# servidor compara as duas versoes e, se divergirem, APAGA a pasta do cliente
-# e baixa o cliente do upstream (settings.py: ensure_client_matches_app_version).
+# tambem vai para <cliente>/version.txt. O cliente e passado com --client, entao
+# o servidor nao compara versoes nem baixa cliente nenhum; o arquivo fica por
+# compatibilidade.
 
 ARG PYTHON_VERSION=3.11
 
@@ -32,15 +32,15 @@ RUN SETUPTOOLS_SCM_PRETEND_VERSION="$(cat version.txt)" \
 # ---------- 3. imagem final ----------
 FROM python:${PYTHON_VERSION}-slim
 WORKDIR /app
-LABEL org.opencontainers.image.title="swingmusic-dev" \
-      org.opencontainers.image.source="https://github.com/rodrigouxp/swingmusic"
+LABEL org.opencontainers.image.title="musix" \
+      org.opencontainers.image.source="https://github.com/rodrigouxp/musix"
 EXPOSE 1970/tcp
 VOLUME /music
 VOLUME /config
 
 # Logs no `docker logs` e comportamento de container (mesmo do upstream).
 ENV PYTHONUNBUFFERED=1 \
-    SWINGMUSIC_IN_DOCKER=1 \
+    MUSIX_IN_DOCKER=1 \
     HOME=/music
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -62,4 +62,4 @@ RUN cp /app/version.txt /app/client/version.txt
 HEALTHCHECK --interval=60s --timeout=5s --start-period=60s \
     CMD python -c "import urllib.request as u; u.urlopen('http://127.0.0.1:1970/')" || exit 1
 
-ENTRYPOINT ["python", "-m", "swingmusic", "--host", "0.0.0.0", "--port", "1970", "--config", "/config", "--client", "/app/client"]
+ENTRYPOINT ["python", "-m", "musix", "--host", "0.0.0.0", "--port", "1970", "--config", "/config", "--client", "/app/client"]

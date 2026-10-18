@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=musix
+GenericName=Music player
+Exec=musix
+Comment=A Music Server running on {{ python-fullversion }}
+Icon=musix
+Categories=AudioVideo;Music;
+Terminal=true

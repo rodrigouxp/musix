@@ -3,7 +3,7 @@ import sys
 import zipfile
 import multiprocessing
 from pathlib import Path
-import swingmusic.__main__ as app
+import musix.__main__ as app
 
 if __name__ == "__main__":
 	# Fixed: freeze_support() must be called immediately to prevent 
