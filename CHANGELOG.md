@@ -8,6 +8,10 @@ A versão do MUSIX fica em [`version.txt`](version.txt) (fonte única). É o nú
 
 O cliente web (`musix-webclient`) não tem número próprio: ele é empacotado junto com o servidor na imagem Docker.
 
+## 3.3.1
+
+- Menu do álbum no desenho do protótipo (Figma): ícones novos, itens em grupos separados por divisores finos (reprodução e listas; capa; marcação; "Search on") e seta de submenu nova em todos os menus. O menu do álbum fica com 232 px de largura; os menus de faixa, artista e playlist mantêm tamanho, ícones e ordem. Só o cliente mudou: a versão sobe para disparar a build da imagem.
+
 ## 3.3.0
 
 Renomear um artista em todos os arquivos, e atualização automática opcional.
