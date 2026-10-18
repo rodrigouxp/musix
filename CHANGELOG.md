@@ -8,6 +8,10 @@ A versão do MUSIX fica em [`version.txt`](version.txt) (fonte única). É o nú
 
 O cliente web (`musix-webclient`) não tem número próprio: ele é empacotado junto com o servidor na imagem Docker.
 
+## 3.3.3
+
+- Lápis do Rename (menu da faixa) e dos botões de editar o nome e a foto do artista trocado pelo lápis de contorno do Figma, em 18 x 18. No menu da faixa só o item Rename muda de tamanho; o texto fica no mesmo ponto e os outros ícones não mudam. O lápis da página de coleção continua o antigo. Só o cliente mudou: a versão sobe para disparar a build da imagem.
+
 ## 3.3.2
 
 - Menu de contexto (todos os menus) com as cores e medidas do design system do Figma (`src/assets/scss/_musix-tokens.scss`): fundo `#222222`, texto `#ECECEC`, item selecionado azul `#1267B7` com texto branco e ícone cinza, raio e sombra do protótipo. Menu do álbum com 10 px de espaço acima e abaixo de cada divisor, para o hover não encostar na linha. Larguras e disposição dos menus de faixa, artista e playlist não mudam; itens críticos continuam no vermelho do app. Só o cliente mudou: a versão sobe para disparar a build da imagem.
