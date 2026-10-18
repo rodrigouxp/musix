@@ -71,9 +71,6 @@ Documentation = "https://swingmx.com/guide/introduction.html"
 Issues = "https://github.com/swingmx/swingmusic/issues"
 
 
-# Include compiled Nuitka extension modules (.so on Linux/macOS, .pyd on
-# Windows) in the wheel. These replace the .py source files after the
-# compile-premium-modules.sh step runs in CI.
 [tool.setuptools.packages.find]
 where = ["src"]
 namespaces = true
@@ -84,11 +81,6 @@ exclude = ["*.tests", "*.tests.*"]
 [tool.setuptools.exclude-package-data]
 "*" = ["*/tests/*", "tests/*"]
 
-[tool.setuptools.package-data]
-"swingmusic.premium" = ["*.so", "*.pyd"]
-"swingmusic.premium.recipes" = ["*.so", "*.pyd"]
-"swingmusic.premium.classical" = ["*.so", "*.pyd"]
-
 [tool.setuptools_scm]
 version_scheme = "only-version"
 local_scheme = "no-local-version"
@@ -98,26 +90,3 @@ fallback_version = "v0.0.0"
 dev = [
     "pytest>=8.4.1",
 ]
-
-# cibuildwheel produces per-platform wheels containing the Nuitka-compiled
-# premium modules. Each wheel is platform-tagged (manylinux for Linux,
-# macosx for macOS) so `pip install swingmusic` picks the right one and
-# premium logic ships as compiled .so rather than plain Python source.
-[tool.cibuildwheel]
-build = ["cp311-*", "cp312-*", "cp313-*", "cp314-*"]
-skip = "*-musllinux_*"
-archs = ["auto64"]
-before-build = "pip install nuitka>=4.0.8 && bash scripts/compile-premium-modules.sh"
-# Verify each built wheel actually ships working premium modules. Runs in
-# a fresh venv with only the wheel installed, so it catches missing-source
-# bugs (the cause of v2.1.5 silently shipping a broken wheel) at build
-# time instead of at install time.
-test-command = "python {project}/scripts/test-premium-imports.py"
-
-[tool.cibuildwheel.linux]
-manylinux-x86_64-image = "manylinux_2_28"
-manylinux-aarch64-image = "manylinux_2_28"
-
-[tool.cibuildwheel.macos]
-# macOS arm64 runners only (Apple Silicon). Intel macOS support is dropped.
-archs = ["arm64"]

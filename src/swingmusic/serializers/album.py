@@ -17,7 +17,6 @@ def album_serializer(album: Album, to_remove: set[str]) -> dict:
         artist.pop("image", None)
 
     album_dict["type"] = "album"
-    album_dict["is_classical"] = album.is_classical
     return album_dict
 
 

@@ -42,11 +42,6 @@ parser.add_argument("--client", help="Path to the Web UI folder.", type=pathlib.
 
 tools = parser.add_argument_group(title="Tools")
 tools.add_argument("--password-reset", help="Reset the password.", action="store_true")
-tools.add_argument(
-    "--test-pro-imports",
-    help="Verify all premium modules are importable, then exit.",
-    action="store_true",
-)
 
 
 def run(*args, **kwargs):
@@ -77,48 +72,6 @@ def run(*args, **kwargs):
                 sys.exit(1)
 
     settings.Paths(config_parent=config_parent, client_dir=client_path)
-
-    if args["test_pro_imports"]:
-        from swingmusic.premium import (
-            PREMIUM_AVAILABLE,
-            MixesPlugin,
-            CloudLyricsPlugin,
-            LicenseManager,
-            CloudClient,
-            LicenseValidation,
-            MixesCron,
-            mixes_api,
-            license_required,
-            ClassicalStore,
-        )
-
-        symbols = {
-            "PREMIUM_AVAILABLE": PREMIUM_AVAILABLE,
-            "MixesPlugin": MixesPlugin,
-            "CloudLyricsPlugin": CloudLyricsPlugin,
-            "LicenseManager": LicenseManager,
-            "CloudClient": CloudClient,
-            "LicenseValidation": LicenseValidation,
-            "MixesCron": MixesCron,
-            "mixes_api": mixes_api,
-            "license_required": license_required,
-            "ClassicalStore": ClassicalStore,
-        }
-
-        failed = [name for name, val in symbols.items() if val is None]
-
-        if not PREMIUM_AVAILABLE:
-            print("FAIL: PREMIUM_AVAILABLE is False")
-            sys.exit(1)
-
-        if failed:
-            print(f"FAIL: {', '.join(failed)} resolved to None")
-            sys.exit(1)
-
-        print("OK: all premium modules imported successfully")
-        for name, val in symbols.items():
-            print(f"  {name}: {val}")
-        sys.exit(0)
 
     AssetHandler.copy_assets_dir()
     AssetHandler.setup_default_client()

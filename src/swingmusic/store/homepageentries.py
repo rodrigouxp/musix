@@ -2,7 +2,6 @@ from abc import ABC
 from typing import Any
 
 from swingmusic.lib.home.recover_items import recover_items
-from swingmusic.models.mix import Mix
 
 
 class HomepageEntry(ABC):
@@ -25,39 +24,6 @@ class HomepageEntry(ABC):
         Return usable items for the homepage.
         """
         ...
-
-
-class MixHomepageEntry(HomepageEntry):
-    """
-    A homepage entry for mixes.
-    self.items is a dict of userid to a dict of mixid to mix.
-    """
-
-    items: dict[int, dict[str, Mix]]
-
-    def __init__(self, title: str, description: str):
-        super().__init__(title, description)
-        self.items = {}
-
-    def get_items(self, userid: int, limit: int | None = None):
-        items = []
-
-        for mix in self.items.get(userid, {}).values():
-            if limit and len(items) >= limit:
-                break
-
-            items.append(
-                {
-                    "type": "mix",
-                    "item": mix.to_dict(),
-                }
-            )
-
-        return {
-            "title": self.title,
-            "description": self.description,
-            "items": items,
-        }
 
 
 class RecentlyPlayedHomepageEntry(HomepageEntry):
@@ -105,20 +71,3 @@ class GenericRecoverableEntry(RecentlyPlayedHomepageEntry):
     # the shape of the data is the same.
     pass
 
-
-class BecauseYouListenedToArtistHomepageEntry(RecentlyPlayedHomepageEntry):
-    """
-    A homepage entry for because you listened to artist.
-    """
-
-    # SHAPE: {userid: {title: str, items: list[RecoverableItem]}}
-    items: dict[int, dict[str, Any]]
-
-    def get_items(self, userid: int, limit: int | None = None):
-        title = self.items.get(userid, {}).get("title")
-        items = self.items.get(userid, {}).get("items", [])[:limit]
-
-        return {
-            "title": title,
-            "items": recover_items(items),
-        }

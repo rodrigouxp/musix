@@ -1,5 +1,4 @@
 from swingmusic.db.userdata import FavoritesTable, PlaylistTable
-from swingmusic.lib.home import find_mix
 from swingmusic.lib.home.recentlyadded import get_recently_added_playlist
 from swingmusic.lib.home.recentlyplayed import get_recently_played_playlist
 from swingmusic.lib.playlistlib import get_first_4_images
@@ -126,23 +125,6 @@ def recover_items(items: list[dict]):
             recovered_item = {
                 "type": "track",
                 "item": serialize_track(track.get_best()),
-            }
-
-        elif item["type"] == "mix":
-            try:
-                splits = item["hash"].split(".")
-                mixid = splits[0]
-                sourcehash = splits[1]
-            except IndexError:
-                continue
-
-            mix = find_mix(mixid, sourcehash)
-            if mix is None:
-                continue
-
-            recovered_item = {
-                "type": "mix",
-                "item": mix,
             }
 
         if recovered_item is not None:

@@ -42,7 +42,6 @@ class Album:
     versions: list[str] = dataclasses.field(default_factory=list)
     fav_userids: list[int] = dataclasses.field(default_factory=list)
     weakhash: str = ""
-    is_classical: bool = False
 
     @property
     def is_favorite(self):

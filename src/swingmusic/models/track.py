@@ -58,7 +58,6 @@ class Track:
     _search_texts: list[str] = field(default_factory=list)
     explicit: bool = False
     fav_userids: list[int] = field(default_factory=list)
-    is_classical: bool = False
 
     @property
     def is_favorite(self):

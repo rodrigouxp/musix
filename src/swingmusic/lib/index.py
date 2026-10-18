@@ -20,7 +20,6 @@ from swingmusic.lib.mapstuff import (
     map_artist_colors,
     map_trackhash_repairs,
 )
-from swingmusic.premium import ClassicalStore, LicenseError
 from swingmusic.utils.threading import background
 
 log = logging.getLogger(__name__)
@@ -75,12 +74,6 @@ def index_everything(full_scan: bool = False):
 
     map_scrobble_data()
     map_favorites()
-
-    if ClassicalStore is not None:
-        try:
-            ClassicalStore.load_albums(key)
-        except LicenseError:
-            pass
 
     CordinateMedia(instance_key=str(time()), overwrite_track_thumbnails=full_scan)
     GeneralStore.end_full_scan()

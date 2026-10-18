@@ -52,7 +52,6 @@ def serialize_track(track: Track, to_remove:set=set(), remove_disc:bool=True) ->
 
     # is_favorite @property is not included in `asdict`
     album_dict["is_favorite"] = track.is_favorite
-    album_dict["is_classical"] = track.is_classical
 
     return album_dict
 

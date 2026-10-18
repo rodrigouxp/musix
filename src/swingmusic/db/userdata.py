@@ -30,7 +30,6 @@ from swingmusic.db.utils import (
 )
 
 from swingmusic.db import Base
-from swingmusic.models.mix import Mix
 from swingmusic.utils.auth import get_current_userid, hash_password
 
 
@@ -606,6 +605,8 @@ class LibDataTable(Base):
 
 
 class MixTable(Base):
+    # INFO: mixes were a premium feature. The table is kept (unused) so
+    # existing databases keep opening without a schema change.
     __tablename__ = "mix"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -622,109 +623,6 @@ class MixTable(Base):
     extra: Mapped[dict[str, Any]] = mapped_column(
         JSON(), nullable=True, default_factory=dict
     )
-
-    @classmethod
-    def get_all(cls, with_userid: bool = False):
-        if with_userid:
-            result = cls.execute(
-                select(cls)
-                .where(cls.userid == get_current_userid())
-                .order_by(cls.timestamp.desc())
-            )
-        else:
-            result = cls.execute(select(cls).order_by(cls.timestamp.desc()))
-
-        for i in next(result).scalars():
-            yield Mix.mix_to_dataclass(i)
-
-    @classmethod
-    def get_by_sourcehash(cls, sourcehash: str):
-        result = cls.execute(select(cls).where(cls.sourcehash == sourcehash))
-
-        res = next(result).scalar()
-
-        if res:
-            return Mix.mix_to_dataclass(res)
-
-    @classmethod
-    def get_by_mixid(cls, mixid: str):
-        result = cls.execute(select(cls).where(cls.mixid == mixid))
-        res = next(result).scalar()
-
-        if res:
-            return Mix.mix_to_dataclass(res)
-
-    @classmethod
-    def insert_one(cls, mix: Mix):
-        mixdict = asdict(mix)
-        mixdict["mixid"] = mix.id
-        del mixdict["id"]
-
-        return next(cls.execute(insert(cls).values(mixdict), commit=True))
-
-    @classmethod
-    def update_one(cls, mixid: str, mix: Mix):
-        mixdict = asdict(mix)
-        mixdict["mixid"] = mix.id
-        del mixdict["id"]
-
-        return next(
-            cls.execute(
-                update(cls)
-                .where(
-                    and_(
-                        cls.mixid == mixid,
-                        cls.sourcehash == mix.sourcehash,
-                        cls.userid == get_current_userid(),
-                    )
-                )
-                .values(mixdict),
-                commit=True,
-            )
-        )
-
-    @classmethod
-    def save_artist_mix(cls, sourcehash: str):
-        """
-        Toggles the saved status of an artist mix.
-        """
-
-        mix = cls.get_by_sourcehash(sourcehash)
-
-        if not mix:
-            return False
-
-        mix.saved = not mix.saved
-        cls.update_one(mix.id, mix)
-
-        return mix.saved
-
-    @classmethod
-    def get_saved_track_mixes(cls):
-        """
-        Return all mixes that have the extra.trackmix_saved set to True.
-        """
-
-        result = cls.execute(select(cls).where(cls.extra.c.trackmix_saved == True))
-        # return Mix.mixes_to_dataclasses(result.fetchall())
-
-        for i in next(result).scalars():
-            yield Mix.mix_to_dataclass(i)
-
-    @classmethod
-    def save_track_mix(cls, sourcehash: str):
-        """
-        Toggles the property extra.trackmix_saved to True.
-        """
-
-        mix = cls.get_by_sourcehash(sourcehash)
-        if not mix:
-            return False
-
-        mix.extra["trackmix_saved"] = not mix.extra.get("trackmix_saved", False)
-        cls.update_one(mix.id, mix)
-
-        return mix.extra["trackmix_saved"]
 
 
 class CollectionTable(Base):

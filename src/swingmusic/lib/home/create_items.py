@@ -1,7 +1,6 @@
 import os
 import pathlib
 from swingmusic.db.userdata import PlaylistTable
-from swingmusic.lib.home import find_mix
 from swingmusic.lib.home.recentlyadded import get_recently_added_playlist
 from swingmusic.lib.home.recentlyplayed import get_recently_played_playlist
 from swingmusic.models.logger import TrackLog
@@ -37,29 +36,7 @@ def create_items(entries: list[TrackLog], limit: int):
         added.add(entry.source)
 
         if entry.type == "mix":
-            if not entry.type_src:
-                continue
-
-            splits = entry.type_src.split(".")
-
-            try:
-                mixid = splits[0]
-                sourcehash = splits[1]
-            except IndexError:
-                continue
-
-            # INFO: Get mix from homepage store
-            mix = find_mix(mixid, sourcehash)
-            if not mix:
-                continue
-
-            items.append(
-                {
-                    "type": "mix",
-                    "hash": entry.type_src,
-                    "timestamp": entry.timestamp,
-                }
-            )
+            # mixes were a premium feature and no longer exist
             continue
 
         if entry.type == "album":

@@ -218,21 +218,3 @@ def send_playlist_image(path: PlaylistImagePath):
     folder = Paths().playlist_img_path
     return send_file_or_fallback(folder, path.imgpath, "playlist.svg")
 
-
-# MIXES
-@api.get("/mix/medium/<imgpath>")
-def send_md_mix_image(path: ImagePath):
-    """
-    Get medium mix image
-    """
-    folder = Paths().md_mixes_img_path
-    return send_file_or_fallback(folder, path.imgpath, "playlist.svg")
-
-
-@api.get("/mix/small/<imgpath>")
-def send_sm_mix_image(path: ImagePath):
-    """
-    Get small mix image
-    """
-    folder = Paths().sm_mixes_img_path
-    return send_file_or_fallback(folder, path.imgpath, "playlist.svg")

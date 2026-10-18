@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from typing import Any
-from dataclasses import dataclass, asdict, field, InitVar
+from dataclasses import dataclass, asdict, field, fields, InitVar
 from swingmusic.data import ARTIST_SPLIT_IGNORE_LIST
 from swingmusic.settings import Paths, Singleton
 
@@ -88,13 +88,6 @@ class UserConfig(metaclass=Singleton):
     lastfmApiSecret: str = "5e5306fbf3e8e3bc92f039b6c6c4bd4e"
     lastfmSessionKeys: dict[str, str] = field(default_factory=dict)
     artistArticleAwareSorting: bool = False
-    trustCloudLyrics: bool = False
-
-    # license
-    licenseKey: str = ""
-
-    # classical support
-    classicalEnabled: bool = True
 
     artistSortingArticles: set[str] = field(
         default_factory=lambda: (
@@ -126,7 +119,12 @@ class UserConfig(metaclass=Singleton):
             return
 
         # loop through the config file and set the values
+        known_keys = {f.name for f in fields(self)}
         for key, value in config.items():
+            if key not in known_keys:
+                # ignore keys that no longer exist (eg. removed premium settings)
+                continue
+
             if key == "artistSplitIgnoreList":
                 # Merge with default values and user file values instead of overwriting
                 default_values = load_default_artist_ignore_list()

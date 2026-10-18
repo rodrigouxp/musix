@@ -16,7 +16,6 @@ from swingmusic.lib.mapstuff import (
     map_scrobble_data,
     map_trackhash_repairs,
 )
-from swingmusic.premium import ClassicalStore, LicenseError
 from swingmusic.setup.sqlite import setup_sqlite
 from swingmusic.store.albums import AlbumStore
 from swingmusic.store.artists import ArtistStore
@@ -24,35 +23,6 @@ from swingmusic.store.folder import FolderStore
 from swingmusic.store.general import GeneralStore
 from swingmusic.store.tracks import TrackStore
 from swingmusic.utils.generators import get_random_str
-
-
-def _validate_license():
-    """
-    Validates the license with the cloud server on startup.
-
-    If a license key exists, attempts to validate with the server.
-    Failures are handled gracefully - the LicenseManager state will
-    reflect the validation result, and premium features will be
-    gated accordingly. In free builds (premium modules absent),
-    this is a no-op.
-    """
-    from swingmusic.premium import LicenseManager, LicenseError
-
-    if LicenseManager is None:
-        # Premium not available in this build; nothing to validate.
-        return
-
-    try:
-        manager = LicenseManager()
-        manager.validate()
-    except LicenseError:
-        # Validation errors (expired, revoked, not registered)
-        # State is already updated - premium features will be disabled
-        pass
-    except Exception:
-        # Network errors or unexpected issues
-        # Grace period will apply based on last_validated timestamp
-        pass
 
 
 def is_uuid4(value: str) -> bool:
@@ -91,8 +61,6 @@ def run_setup():
         config.write_to_file(asdict(config))
 
     setup_sqlite()
-    # Validate license on startup
-    _validate_license()
 
 
 def load_into_mem():
@@ -114,9 +82,3 @@ def load_into_mem():
     map_favorites()
     map_artist_colors()
     map_album_colors()
-
-    if ClassicalStore is not None:
-        try:
-            ClassicalStore.load_albums(key)
-        except LicenseError:
-            pass

@@ -17,7 +17,6 @@ from swingmusic.api.apischemas import (
 from swingmusic.config import UserConfig
 from swingmusic.db.userdata import SimilarArtistTable
 from swingmusic.models.album import Album
-from swingmusic.premium import ClassicalStore, CloudError, LicenseError
 from swingmusic.store.albums import AlbumStore
 from swingmusic.store.artists import ArtistStore
 from swingmusic.store.tracks import TrackStore
@@ -53,10 +52,7 @@ class GetMoreFromArtistsBody(AlbumLimitSchema):
 
 
 class GetAlbumInfoBody(AlbumHashSchema, AlbumLimitSchema):
-    classical_view: bool = Field(
-        description="Whether to return the album info in classical view.",
-        default=False,
-    )
+    pass
 
 
 # NOTE: Don't use "/" as it will cause redirects (failure)
@@ -116,34 +112,12 @@ def get_album_tracks_and_info(body: GetAlbumInfoBody):
         "other_versions": other_versions,
     }
 
-    if (
-        body.classical_view
-        and album.is_classical
-        and ClassicalStore is not None
-        and UserConfig().classicalEnabled
-    ):
-        try:
-            from swingmusic.premium.classical.serializers import serialize_album_works
-
-            response["works"] = serialize_album_works(sort_by_track_no(tracks))
-            response["tracks"] = []
-            return response
-        except (LicenseError, CloudError, ImportError) as e:
-            print("error serializing album works", e)
-
     response["tracks"] = serialize_tracks(tracks, remove_disc=False)
     return response
 
 
-class GetAlbumTracksQuery(BaseModel):
-    classical_view: bool = Field(
-        description="Whether to return the tracks grouped as classical works.",
-        default=False,
-    )
-
-
 @api.get("/<albumhash>/tracks")
-def get_album_tracks(path: AlbumHashSchema, query: GetAlbumTracksQuery):
+def get_album_tracks(path: AlbumHashSchema):
     """
     Get album tracks
 
@@ -152,23 +126,6 @@ def get_album_tracks(path: AlbumHashSchema, query: GetAlbumTracksQuery):
     """
     tracks = AlbumStore.get_album_tracks(path.albumhash)
     tracks = sort_by_track_no(tracks)
-
-    albumentry = AlbumStore.albummap.get(path.albumhash)
-    is_classical = albumentry is not None and albumentry.album.is_classical
-
-    if (
-        query.classical_view
-        and is_classical
-        and ClassicalStore is not None
-        and UserConfig().classicalEnabled
-    ):
-        try:
-            from swingmusic.premium.classical.serializers import serialize_album_works
-
-            return serialize_album_works(tracks)
-        except (LicenseError, CloudError, ImportError) as e:
-            print("error serializing album works", e)
-            return []
 
     return serialize_tracks(tracks)
 
