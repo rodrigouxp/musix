@@ -104,6 +104,8 @@ memory-profiler==0.61.0
     # via musix (pyproject.toml)
 msgpack==1.1.2
     # via locust
+mutagen==1.48.1
+    # via musix (pyproject.toml)
 natsort==8.4.0
     # via musix (pyproject.toml)
 nuitka==4.0.8

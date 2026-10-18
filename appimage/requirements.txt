@@ -16,6 +16,7 @@ watchdog>=4.0.0
 flask-jwt-extended>=4.6.0
 sqlalchemy>=2.0.31
 memory-profiler>=0.61.0
+mutagen>=1.48.1
 sortedcontainers>=2.4.0
 xxhash>=3.4.1
 ffmpeg-python>=0.2.0
