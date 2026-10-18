@@ -11,7 +11,7 @@ from typing import Any
 from flask import request
 from flask_openapi3 import APIBlueprint, Tag
 from PIL import Image, ImageOps
-from pydantic import Field
+from pydantic import BaseModel, Field
 from musix.api.apischemas import (
     AlbumLimitSchema,
     ArtistHashSchema,
@@ -20,6 +20,8 @@ from musix.api.apischemas import (
 )
 
 from musix.api.auth import admin_required
+from musix.config import UserConfig
+from musix.lib import artistrename
 from musix.db.userdata import SimilarArtistTable
 from musix.lib.artistlib import (
     DownloadImage,
@@ -336,3 +338,83 @@ def refetch_artist_image(path: ArtistHashSchema):
     update_artist_color(artisthash)
 
     return {"ok": True, "image": name, "source": "deezer"}
+
+
+class RenameArtistBody(BaseModel):
+    name: str = Field(description="The new name of the artist")
+    confirm: bool = Field(False, description="Must be true to start the rename")
+
+
+def _rename_checks(artisthash: str, name: str):
+    """
+    Returns ``(entry, name)`` or ``(None, error response)``.
+    """
+    entry = ArtistStore.artistmap.get(artisthash)
+
+    if entry is None:
+        return None, ({"error": "Artist not found"}, 404)
+
+    try:
+        return entry, artistrename.validate_new_name(name, UserConfig())
+    except artistrename.RenameError as error:
+        return None, ({"error": error.message}, error.status)
+
+
+@api.post("/<artisthash>/rename/preview")
+@admin_required()
+def preview_artist_rename(path: ArtistHashSchema, body: RenameArtistBody):
+    """
+    Preview renaming an artist
+
+    Says what would change if the artist were renamed in all the files: how many
+    tracks and albums, the tracks where the artist only takes part, the files that
+    would be renamed, the files that can not be written, name conflicts and whether
+    the new name is an artist that already exists (the two would be merged).
+    Reads tags and writes nothing.
+    """
+    entry, checked = _rename_checks(path.artisthash, body.name)
+
+    if entry is None:
+        return checked
+
+    return artistrename.build_preview(path.artisthash, checked, UserConfig())
+
+
+@api.post("/<artisthash>/rename")
+@admin_required()
+def rename_artist(path: ArtistHashSchema, body: RenameArtistBody):
+    """
+    Rename an artist in all the files
+
+    Needs ``confirm: true``. Runs in the background, one file at a time, through the
+    safe tag writer; a file that fails does not stop the others. Follow it with
+    ``GET /artist/rename/status``. Only one rename runs at a time.
+    """
+    entry, checked = _rename_checks(path.artisthash, body.name)
+
+    if entry is None:
+        return checked
+
+    if not body.confirm:
+        return {"error": "Send confirm: true to start the rename"}, 400
+
+    if checked == entry.artist.name:
+        return {"error": "The new name is the same as the current one"}, 400
+
+    try:
+        artistrename.start_rename(path.artisthash, checked, UserConfig())
+    except artistrename.RenameError as error:
+        return {"error": error.message}, error.status
+
+    return {"ok": True, "started": True}, 202
+
+
+@api.get("/rename/status")
+def artist_rename_status():
+    """
+    Progress of the artist rename
+
+    How many files are done, the errors by file and, when it finishes, the new
+    artisthash and the files that failed.
+    """
+    return artistrename.job_status()

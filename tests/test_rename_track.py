@@ -27,40 +27,6 @@ from musix.store.tracks import TrackStore
 
 
 @pytest.fixture
-def library(app_env, make_audio):
-    """
-    Makes music files and indexes them, the way the scanner does.
-    """
-    files: list[Path] = []
-
-    class Library:
-        env = app_env
-
-        @staticmethod
-        def add(fmt: str, name: str | None = None, **tags: str) -> Path:
-            path = make_audio(fmt, name, **tags)
-            files.append(path)
-            return path
-
-        @staticmethod
-        def index():
-            TrackTable.reset()
-
-            for path in files:
-                TrackTable.insert_one(get_tags(path.as_posix(), config=app_env.config))
-
-            reload_stores()
-
-        @staticmethod
-        def track(path: Path):
-            found = TrackStore.get_tracks_by_filepaths([path.as_posix()])
-            return found[0] if found else None
-
-    UserTable.insert_one({"username": "admin", "password": "x", "roles": ["admin"]})
-    return Library
-
-
-@pytest.fixture
 def http(library, monkeypatch):
     monkeypatch.setattr(auth_api, "current_user", {"roles": ["admin"]})
     monkeypatch.setattr(tagwriter, "_default_config", lambda: library.env.config)
