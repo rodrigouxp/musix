@@ -8,6 +8,10 @@ A versão do MUSIX fica em [`version.txt`](version.txt) (fonte única). É o nú
 
 O cliente web (`musix-webclient`) não tem número próprio: ele é empacotado junto com o servidor na imagem Docker.
 
+## 3.3.5
+
+- Menu das músicas: "Play next" passa para o mesmo grupo de "Add to queue" e "Add to Playlist" (sem divisor entre eles). Só o cliente mudou: a versão sobe para disparar a build da imagem.
+
 ## 3.3.4
 
 - Menu de contexto das músicas no desenho do protótipo (Figma): 232 px de largura, ícones novos (álbum, pasta e artista incluídos), itens em grupos separados por divisores finos (Play next; fila e playlist; ir para álbum, pasta e artista; abrir nos arquivos; Rename só para admin; Search on). "Remove from playlist" e "Remove from queue" continuam vermelhos e no topo, num grupo próprio. O menu de artista e o de playlist não mudam. Só o cliente mudou: a versão sobe para disparar a build da imagem.
