@@ -8,6 +8,10 @@ A versão do MUSIX fica em [`version.txt`](version.txt) (fonte única). É o nú
 
 O cliente web (`musix-webclient`) não tem número próprio: ele é empacotado junto com o servidor na imagem Docker.
 
+## 3.3.4
+
+- Menu de contexto das músicas no desenho do protótipo (Figma): 232 px de largura, ícones novos (álbum, pasta e artista incluídos), itens em grupos separados por divisores finos (Play next; fila e playlist; ir para álbum, pasta e artista; abrir nos arquivos; Rename só para admin; Search on). "Remove from playlist" e "Remove from queue" continuam vermelhos e no topo, num grupo próprio. O menu de artista e o de playlist não mudam. Só o cliente mudou: a versão sobe para disparar a build da imagem.
+
 ## 3.3.3
 
 - Lápis do Rename (menu da faixa) e dos botões de editar o nome e a foto do artista trocado pelo lápis de contorno do Figma, em 18 x 18. No menu da faixa só o item Rename muda de tamanho; o texto fica no mesmo ponto e os outros ícones não mudam. O lápis da página de coleção continua o antigo. Só o cliente mudou: a versão sobe para disparar a build da imagem.
