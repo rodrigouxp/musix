@@ -13,6 +13,16 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.5.0 (2026-10-20)
+
+- **Ícones do Figma em todo o app.** Os ícones do componente Icon (`src/assets/icons/figma/`) passam a ser os do app: Home, Quick scan (refresh), Settings, Delete (sempre em `error/300`), Add to Collection, Lyrics, Update album cover, volume (mudo, baixo e alto), lupa e Search on, favoritar (e favoritado em `error/300`), Logout, o menu do celular e o X da busca (14 x 14 px). Os ícones dos menus de contexto que existem no Figma (adicionar à fila, à playlist, tocar a seguir, renomear, marcar EPs/Soundtrack/Live) também. Os ícones antigos que ficaram sem uso saíram. Ícones que o Figma não tem (shuffle, repeat, play, pause e outros) continuam os do repositório.
+- **Um vermelho só no app**: `error/300` do Figma (`#F7635C`). O token `--color-error-300` estava errado (`#ff7676`) e foi corrigido; `$red` e `$danger` leem o token, e os outros vermelhos soltos (`$pink`, o do aviso de erro e o da tela de contas) viraram o mesmo.
+- **Menu do usuário** (foto no canto superior direito) no padrão dos menus de contexto: ícone à esquerda, texto depois, mesmas medidas e cores (tokens `--menu-*`). Mesmas funções e ordem: saudação, Quick scan, Settings e Log out.
+- **Barra do player** (acima de 900 px): a miniatura do álbum fica sempre à esquerda e leva à página do álbum que está tocando; depois vêm o nome da música, o favoritar e o novo botão de adicionar (menu com "Add to queue" e "Add to playlist"), com 14 px entre cada um. O grupo da direita ficou letras e volume. O hover dos botões da barra é só o preenchimento, sem borda. Até 900 px nada muda de lugar.
+- "Remove from queue" (menu da música na tela Now Playing) com ícone `delete` do Figma e o texto com q minúsculo.
+- O item "Settings" saiu do painel lateral esquerdo (continua no menu do usuário).
+- Só o cliente mudou: a versão sobe para disparar a build da imagem.
+
 ## 3.4.2 (2026-10-20)
 
 - **Controles do player** (acima de 900 px) mais discretos: shuffle, anterior, play/pause, próxima e repeat com glifo de 18 px de altura (anterior e próxima 18 x 18). A escala de 1,2 da linha de botões saiu e o play/pause não é mais maior que os outros.
