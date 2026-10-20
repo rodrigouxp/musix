@@ -13,6 +13,11 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.5.1 (2026-10-20)
+
+- A seta dos itens com submenu, em todos os menus de contexto, passa a ser o `chevron-right` do Figma, em 10 x 10 px (a seta antiga tinha 8 x 12). O X de apagar o texto da busca ficou com 10 x 10 px (era 14 x 14).
+- Só o cliente mudou: a versão sobe para disparar a build da imagem.
+
 ## 3.5.0 (2026-10-20)
 
 - **Ícones do Figma em todo o app.** Os ícones do componente Icon (`src/assets/icons/figma/`) passam a ser os do app: Home, Quick scan (refresh), Settings, Delete (sempre em `error/300`), Add to Collection, Lyrics, Update album cover, volume (mudo, baixo e alto), lupa e Search on, favoritar (e favoritado em `error/300`), Logout, o menu do celular e o X da busca (14 x 14 px). Os ícones dos menus de contexto que existem no Figma (adicionar à fila, à playlist, tocar a seguir, renomear, marcar EPs/Soundtrack/Live) também. Os ícones antigos que ficaram sem uso saíram. Ícones que o Figma não tem (shuffle, repeat, play, pause e outros) continuam os do repositório.
