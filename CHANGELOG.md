@@ -13,6 +13,13 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.4.1 (2026-10-20)
+
+- **Margem lateral única de 16 px** no painel principal, dos dois lados e em todas as larguras: a mesma do painel da esquerda e da barra inferior. Um token só (`--layout-gutter`, em `_musix-tokens.scss`) alimenta o topo, as páginas e o painel da esquerda; o `clamp` de porcentagem que dava 32 px ou 80 px sumiu. Em telas largas o conteúdo ganha 128 px e o número de cards por linha pode subir. O layout alternativo e as telas de até 900 px não mudam.
+- **Controles do player** (acima de 900 px): shuffle, anterior, play/pause, próxima e repeat no centro, com o tempo atual, a barra de progresso e o tempo total embaixo; o grupo da direita ficou letras, favorito e volume. O volume virou um controle horizontal sempre aberto ao lado do alto-falante (até 900 px continua o popover). Anterior e próxima usam os ícones `play-previous` e `play-next` do Figma. O microfone das letras ficou 6,5% menor. Nas telas de até 900 px nada mudou de lugar.
+- Registro do que foi publicado **sem subir a versão** (só cliente), antes da 3.4.0: menu lateral com Albums e Artists, Home sem Browse Library, busca do topo centralizada e ícone de letras trocado (`d1f2800`); e a busca do topo sem sobrepor as abas da busca, com os menus de contexto responsivos no toque (`841ffc1`).
+- Só o cliente mudou: a versão sobe para disparar a build da imagem.
+
 ## 3.4.0 (2026-10-19)
 
 - **Renomear o álbum**, na página do álbum (só admin): o lápis ao lado do título abre o diálogo com prévia, e o título novo é gravado na tag `ALBUM` de todos os arquivos do álbum, de forma segura (cópia temporária, conferência depois de escrever, só a tag do álbum muda). O hash do álbum e os das faixas mudam junto, e favoritos, plays, playlists, coleções, tipo do álbum, cores e miniaturas acompanham. Se o título novo é o de outro álbum dos mesmos artistas, os dois viram um. Trocar só maiúsculas ou espaços muda a tag e não muda o hash. Arquivos sem a tag `ALBUM` não são tocados (a tag nunca é criada).
