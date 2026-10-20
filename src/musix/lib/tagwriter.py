@@ -15,10 +15,11 @@ How a write works, for each file:
 Any failure removes the copy and leaves the original untouched. The original
 file is never opened for writing.
 
-Only what is asked is written: the title, the artist tags and the front cover.
-A tag of an artist that the file did not have is never created (the app guesses
+Only what is asked is written: the title, the album, the artist tags and the front
+cover. A tag of an artist that the file did not have is never created (the app guesses
 the album owner from the artist when ``ALBUMARTIST`` is missing, so creating the tag
-would change the owner), unless the caller names it in ``create_missing``.
+would change the owner), and neither is the album tag (a file without it does not belong
+to the album it is shown in), unless the caller names it in ``create_missing``.
 """
 
 import base64
@@ -32,7 +33,7 @@ from typing import Any, Iterable
 
 import mutagen
 from mutagen.flac import FLAC, Picture
-from mutagen.id3 import APIC, ID3, TIT2, TPE1, TPE2, TXXX
+from mutagen.id3 import APIC, ID3, TALB, TIT2, TPE1, TPE2, TXXX
 from mutagen.mp4 import MP4, MP4Cover, MP4FreeForm
 from mutagen.oggopus import OggOpus
 from mutagen.oggvorbis import OggVorbis
@@ -310,6 +311,8 @@ class TagSnapshot:
     """
 
     title: str | None = None
+    # the raw text of the album tag (``None`` when the file does not have the tag)
+    album: str | None = None
     artist: list[str] | None = None
     albumartist: list[str] | None = None
     artists: list[str] | None = None
@@ -398,9 +401,11 @@ class _Adapter:
 
     def snapshot(self) -> TagSnapshot:
         title = self.get("title")
+        album = self.get("album")
 
         return TagSnapshot(
             title=title[0] if title else None,
+            album=album[0] if album else None,
             artist=self.get("artist"),
             albumartist=self.get("albumartist"),
             artists=self.get("artists"),
@@ -410,7 +415,13 @@ class _Adapter:
 
 
 class _Id3Adapter(_Adapter):
-    _FRAMES = {"title": "TIT2", "artist": "TPE1", "albumartist": "TPE2", "artists": "TXXX:ARTISTS"}
+    _FRAMES = {
+        "title": "TIT2",
+        "album": "TALB",
+        "artist": "TPE1",
+        "albumartist": "TPE2",
+        "artists": "TXXX:ARTISTS",
+    }
 
     def __init__(self, path: Path):
         super().__init__(path)
@@ -441,6 +452,8 @@ class _Id3Adapter(_Adapter):
             frame = TXXX(encoding=encoding, desc=key.split(":", 1)[1], text=values)
         elif name == "title":
             frame = TIT2(encoding=encoding, text=values)
+        elif name == "album":
+            frame = TALB(encoding=encoding, text=values)
         elif name == "artist":
             frame = TPE1(encoding=encoding, text=values)
         else:
@@ -496,7 +509,13 @@ class _VorbisAdapter(_Adapter):
     FLAC, Ogg Vorbis and Opus: Vorbis comments.
     """
 
-    _KEYS = {"title": "title", "artist": "artist", "albumartist": "albumartist", "artists": "artists"}
+    _KEYS = {
+        "title": "title",
+        "album": "album",
+        "artist": "artist",
+        "albumartist": "albumartist",
+        "artists": "artists",
+    }
 
     def __init__(self, path: Path, audio: Any):
         super().__init__(path)
@@ -596,6 +615,7 @@ class _VorbisAdapter(_Adapter):
 class _Mp4Adapter(_Adapter):
     _KEYS = {
         "title": "\xa9nam",
+        "album": "\xa9alb",
         "artist": "\xa9ART",
         "albumartist": "aART",
         "artists": "----:com.apple.iTunes:ARTISTS",
@@ -658,10 +678,11 @@ class TagChanges:
     What to write. ``None`` means "leave it".
 
     The artist fields are the new raw values of the tag (see ``replace_artist_element``).
-    ``cover`` is ``(image bytes, mime type)``.
+    ``album`` is the new text of the album tag. ``cover`` is ``(image bytes, mime type)``.
     """
 
     title: str | None = None
+    album: str | None = None
     artist: list[str] | None = None
     albumartist: list[str] | None = None
     artists: list[str] | None = None
@@ -685,9 +706,9 @@ def write_tags(
     """
     Writes ``changes`` into a music file, safely (see the top of this module).
 
-    :param create_missing: artist tags (``"artist"``, ``"albumartist"``, ``"artists"``)
-        that may be created if the file does not have them. Without it, a change to
-        an artist tag the file does not have is skipped.
+    :param create_missing: tags (``"artist"``, ``"albumartist"``, ``"artists"``,
+        ``"album"``) that may be created if the file does not have them. Without it, a
+        change to a tag the file does not have is skipped.
     :param swap: ``(old_hash, new_name)`` of an artist rename; the artist tags are
         then also checked with ``assert_artists_preserved`` after the write.
     :returns: the tags of the file after the write
@@ -739,6 +760,11 @@ def _apply(
         adapter.set("title", [changes.title])
         expected["title"] = changes.title
 
+    # the album tag of a file that has none is not created (see the top of this module)
+    if changes.album is not None and (before.album is not None or "album" in create_missing):
+        adapter.set("album", [changes.album])
+        expected["album"] = changes.album
+
     for name in ARTIST_FIELDS:
         values = getattr(changes, name)
 
@@ -782,7 +808,7 @@ def _verify(
         )
         raise TagVerificationError(f"other tags changed: {changed}")
 
-    for name in ("title", *ARTIST_FIELDS):
+    for name in ("title", "album", *ARTIST_FIELDS):
         wanted = expected.get(name)
 
         if wanted is None:
@@ -832,6 +858,9 @@ def _verify_with_tinytag(path: Path, after: TagSnapshot, duration_before: float 
 
     if after.title is not None and tags.title != after.title:
         raise TagVerificationError("the app reads a different title")
+
+    if after.album is not None and tags.album != after.album:
+        raise TagVerificationError("the app reads a different album")
 
     all_tags = tags.as_dict()
 

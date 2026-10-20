@@ -16,12 +16,14 @@ from musix.api.apischemas import (
 )
 
 from musix.api.auth import admin_required
+from musix.config import UserConfig
 from musix.db.userdata import AlbumTypeTable, SimilarArtistTable
 from musix.lib.coverart import (
     find_best_cover,
     read_cover_for_embedding,
     refresh_album_art,
 )
+from musix.lib import albumrename
 from musix.lib.tagwriter import TagChanges, TagWriteError, write_tags
 from musix.models.album import Album
 from musix.settings import Paths
@@ -361,3 +363,83 @@ def get_similar_albums(query: GetSimilarAlbumsQuery):
     sample = random.sample(albums, min(len(albums), limit))
 
     return serialize_for_card_many(sample[:limit])
+
+
+class RenameAlbumBody(BaseModel):
+    title: str = Field(description="The new title of the album (the text of the album tag)")
+    confirm: bool = Field(False, description="Must be true to start the rename")
+
+
+def _rename_checks(albumhash: str, title: str):
+    """
+    Returns ``(entry, title)`` or ``(None, error response)``.
+    """
+    entry = AlbumStore.albummap.get(albumhash)
+
+    if entry is None:
+        return None, ({"error": "Album not found"}, 404)
+
+    try:
+        return entry, albumrename.validate_new_title(title)
+    except albumrename.RenameError as error:
+        return None, ({"error": error.message}, error.status)
+
+
+@api.post("/<albumhash>/rename/preview")
+@admin_required()
+def preview_album_rename(path: AlbumHashSchema, body: RenameAlbumBody):
+    """
+    Preview renaming an album
+
+    Says what would change if the album were renamed in all its files: how many files,
+    the different titles the album tag has now, the files that can not be written or have
+    no album tag, whether the hash of the album changes and whether the new title is an
+    album that already exists (the two would be merged). Reads tags and writes nothing.
+    """
+    entry, checked = _rename_checks(path.albumhash, body.title)
+
+    if entry is None:
+        return checked
+
+    try:
+        return albumrename.build_preview(path.albumhash, checked, UserConfig())
+    except albumrename.RenameError as error:
+        return {"error": error.message}, error.status
+
+
+@api.post("/<albumhash>/rename")
+@admin_required()
+def rename_album(path: AlbumHashSchema, body: RenameAlbumBody):
+    """
+    Rename an album in all its files
+
+    Needs ``confirm: true``. Writes the album tag of every file of the album, in the
+    background, one file at a time, through the safe tag writer; a file that fails does
+    not stop the others. Follow it with ``GET /album/rename/status``. Only one rename (of
+    an album or of an artist) runs at a time.
+    """
+    entry, checked = _rename_checks(path.albumhash, body.title)
+
+    if entry is None:
+        return checked
+
+    if not body.confirm:
+        return {"error": "Send confirm: true to start the rename"}, 400
+
+    try:
+        albumrename.start_rename(path.albumhash, checked, UserConfig())
+    except albumrename.RenameError as error:
+        return {"error": error.message}, error.status
+
+    return {"ok": True, "started": True}, 202
+
+
+@api.get("/rename/status")
+def album_rename_status():
+    """
+    Progress of the album rename
+
+    How many files are done, the errors by file and, when it finishes, the new
+    albumhash (the same one when it did not change) and the files that failed.
+    """
+    return albumrename.job_status()

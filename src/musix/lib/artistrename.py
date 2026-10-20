@@ -17,7 +17,6 @@ the files whose ``ALBUMARTIST`` has X.
 import logging
 import os
 import re
-import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -25,8 +24,8 @@ from typing import Any
 
 from musix import settings
 from musix.config import UserConfig
-from musix.lib.index import reload_stores
-from musix.lib.rekey import log_rekey, refresh_track_extras, rekey_hash
+from musix.lib.rekey import log_rekey, rekey_hash
+from musix.lib.renamecommon import BaseJobState, run_in_background, update_hashes
 from musix.lib.tagwriter import (
     ARTIST_FIELDS,
     SUPPORTED_EXTENSIONS,
@@ -41,8 +40,6 @@ from musix.lib.trackrename import (
     RenameError,
     _same_file,
     append_journal,
-    ensure_album_thumbnails,
-    reindex_files,
     safe_rename,
     sanitize_filename,
 )
@@ -372,23 +369,16 @@ def build_preview(old_hash: str, new_name: str, config: Any) -> dict[str, Any]:
 # SECTION: the job
 
 
-class JobState:
+class JobState(BaseJobState):
     """
-    The state of the (only) rename job. Read by ``GET /artist/rename/status``.
+    The state of the artist rename job. Read by ``GET /artist/rename/status``. The lock and
+    the rule "one rename at a time" are shared with the album rename (see ``renamecommon``).
     """
 
-    lock = threading.Lock()
-    running = False
+    kind = "artist"
     old_hash = ""
     old_name = ""
     new_name = ""
-    done = 0
-    total = 0
-    current: str | None = None
-    errors: dict[str, str] = {}
-    result: dict[str, Any] | None = None
-    started = 0.0
-    finished = 0.0
 
 
 def job_status() -> dict[str, Any]:
@@ -409,35 +399,22 @@ def job_status() -> dict[str, Any]:
 
 def start_rename(old_hash: str, new_name: str, config: Any, wait: bool = False) -> None:
     """
-    Starts the rename in a background thread. Raises ``RenameError(409)`` if one is running.
+    Starts the rename in a background thread. Raises ``RenameError(409)`` if a rename
+    (of an artist or of an album) is running.
     """
     entry = ArtistStore.artistmap.get(old_hash)
 
     if entry is None:
         raise RenameError(404, "Artist not found")
 
-    with JobState.lock:
-        if JobState.running:
-            raise RenameError(409, "Another artist rename is already running")
+    JobState.begin()
+    JobState.old_hash = old_hash
+    JobState.old_name = entry.artist.name
+    JobState.new_name = new_name
 
-        JobState.running = True
-        JobState.old_hash = old_hash
-        JobState.old_name = entry.artist.name
-        JobState.new_name = new_name
-        JobState.done = 0
-        JobState.total = 0
-        JobState.current = None
-        JobState.errors = {}
-        JobState.result = None
-        JobState.started = time.time()
-
-    thread = threading.Thread(
-        target=_run, args=(old_hash, new_name, config), name="artist-rename", daemon=True
+    run_in_background(
+        JobState, lambda: _do_rename(old_hash, new_name, config), "artist-rename", wait
     )
-    thread.start()
-
-    if wait:
-        thread.join()
 
 
 def _apply(plan: FilePlan, old_hash: str, new_name: str, config: Any):
@@ -464,20 +441,6 @@ def _apply(plan: FilePlan, old_hash: str, new_name: str, config: Any):
                 log.error(f"Could not undo the rename of {plan.path}: {undo_error}")
 
         raise
-
-
-def _run(old_hash: str, new_name: str, config: Any):
-    try:
-        result = _do_rename(old_hash, new_name, config)
-    except Exception as error:
-        log.exception("artist rename failed")
-        result = {"error": f"{type(error).__name__}: {error}", "new_artisthash": None}
-    finally:
-        JobState.current = None
-
-    JobState.result = result
-    JobState.finished = time.time()
-    JobState.running = False
 
 
 def _do_rename(old_hash: str, new_name: str, config: Any) -> dict[str, Any]:
@@ -558,85 +521,13 @@ def _update_hashes(
 ) -> dict[str, Any]:
     """
     Reads the written files again, moves the data from the old hashes to the new
-    ones and loads the stores again.
+    ones and loads the stores again (see ``renamecommon.update_hashes``).
     """
-    old_to_new = {
-        p.path.as_posix(): (p.new_path or p.path).as_posix() for p in ok
-    }
-    new_tracks = reindex_files(old_to_new)
 
-    # old hash -> the new hashes its files got, and how many of its files were written
-    track_map: dict[str, set[str]] = {}
-    album_map: dict[str, set[str]] = {}
-    written_per_track: dict[str, int] = {}
-    written_per_album: dict[str, int] = {}
+    def move_artist(moved: dict[str, Any]):
+        # the artist moves only when no file is left with the old name
+        if not failed and old_hash != new_hash:
+            log_rekey("artist", old_hash, new_hash, rekey_hash("artist", old_hash, new_hash))
+            moved["artist_moved"] = True
 
-    for plan in ok:
-        new_track = new_tracks.get((plan.new_path or plan.path).as_posix())
-
-        if new_track is None:
-            continue
-
-        old = plan.track
-        track_map.setdefault(old.trackhash, set()).add(new_track.trackhash)
-        album_map.setdefault(old.albumhash, set()).add(new_track.albumhash)
-        written_per_track[old.trackhash] = written_per_track.get(old.trackhash, 0) + 1
-        written_per_album[old.albumhash] = written_per_album.get(old.albumhash, 0) + 1
-
-    moved: dict[str, Any] = {"tracks": 0, "albums": 0}
-
-    # a hash is moved only when every file under it was written: otherwise some file
-    # still has the old hash and its data has to stay
-    for old, news in track_map.items():
-        group = TrackStore.trackhashmap.get(old)
-        total = len(group.tracks) if group else written_per_track[old]
-
-        if len(news) == 1 and written_per_track[old] == total:
-            (new,) = news
-
-            if new != old:
-                log_rekey("track", old, new, rekey_hash("track", old, new))
-                moved["tracks"] += 1
-
-    from musix.store.albums import AlbumStore
-
-    for old, news in album_map.items():
-        entry = AlbumStore.albummap.get(old)
-        total = len(
-            [
-                t
-                for th in (entry.trackhashes if entry else [])
-                for t in (TrackStore.trackhashmap[th].tracks if th in TrackStore.trackhashmap else [])
-                if t.albumhash == old
-            ]
-        ) or written_per_album[old]
-
-        if len(news) == 1 and written_per_album[old] == total:
-            (new,) = news
-
-            if new != old:
-                log_rekey("album", old, new, rekey_hash("album", old, new))
-                moved["albums"] += 1
-
-    # the artist moves only when no file is left with the old name
-    if not failed and old_hash != new_hash:
-        log_rekey("artist", old_hash, new_hash, rekey_hash("artist", old_hash, new_hash))
-        moved["artist_moved"] = True
-
-    ensure_album_thumbnails(list(new_tracks.values()))
-    reload_stores()
-
-    try:
-        from musix.lib.recipes.recents import RecentlyPlayed
-
-        RecentlyPlayed()
-    except Exception as error:
-        log.warning(f"Could not rebuild the recently played row: {error}")
-
-    for trackhash in {t.trackhash for t in new_tracks.values()}:
-        try:
-            refresh_track_extras(trackhash)
-        except Exception as error:
-            log.warning(f"Could not refresh the extra info of {trackhash}: {error}")
-
-    return moved
+    return update_hashes(ok, after_moved=move_artist).moved

@@ -1,12 +1,24 @@
 # Histórico de versões
 
-A versão do MUSIX fica em [`version.txt`](version.txt) (fonte única). É o número que aparece em **Settings > About** e no rodapé do menu. A cada conjunto de mudanças:
-
-1. sobe o número em `version.txt` (mudança com recurso novo sobe o do meio: 3.1.0 → 3.2.0; só correção sobe o último: 3.1.0 → 3.1.1);
-2. acrescenta uma seção neste arquivo, com o que mudou;
-3. o commit que sobe a versão diz isso na mensagem (`chore: versão 3.2.0`).
+A versão do MUSIX fica em [`version.txt`](version.txt) (fonte única). É o número que aparece em **Settings > About** e no rodapé do menu. Cada entrega publicada sobe a versão e ganha uma seção neste arquivo, com a data e um resumo curto.
 
 O cliente web (`musix-webclient`) não tem número próprio: ele é empacotado junto com o servidor na imagem Docker.
+
+## Regra de versões
+
+Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
+
+- **MENOR sobe** (e a CORREÇÃO volta a 0) quando a entrega traz um recurso novo que o usuário percebe e que não existia, ou muda um comportamento de forma relevante.
+- **CORREÇÃO sobe** em bug, ajuste visual, de ícone ou de texto, responsividade, refatoração e mudança só de cliente sem recurso novo.
+- **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
+- **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
+
+## 3.4.0 (2026-10-19)
+
+- **Renomear o álbum**, na página do álbum (só admin): o lápis ao lado do título abre o diálogo com prévia, e o título novo é gravado na tag `ALBUM` de todos os arquivos do álbum, de forma segura (cópia temporária, conferência depois de escrever, só a tag do álbum muda). O hash do álbum e os das faixas mudam junto, e favoritos, plays, playlists, coleções, tipo do álbum, cores e miniaturas acompanham. Se o título novo é o de outro álbum dos mesmos artistas, os dois viram um. Trocar só maiúsculas ou espaços muda a tag e não muda o hash. Arquivos sem a tag `ALBUM` não são tocados (a tag nunca é criada).
+- Servidor: `POST /album/<albumhash>/rename/preview`, `POST /album/<albumhash>/rename` e `GET /album/rename/status`. Só um renomear (de artista ou de álbum) roda por vez no app inteiro. Cada arquivo gravado entra em `rename-journal.jsonl` com `"action": "rename-album"`.
+- O que o renomear artista e o renomear álbum dividem foi para `lib/renamecommon.py` (estado do job e trava, atualização dos hashes e recarga dos stores); o renomear artista continua igual. O diálogo do cliente também é um só (`RenameDialog.vue`), usado pelo artista e pelo álbum.
+- Não há dependência nova.
 
 ## 3.3.5
 
