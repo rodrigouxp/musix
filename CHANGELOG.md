@@ -13,6 +13,12 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.4.2 (2026-10-20)
+
+- **Controles do player** (acima de 900 px) mais discretos: shuffle, anterior, play/pause, próxima e repeat com glifo de 18 px de altura (anterior e próxima 18 x 18). A escala de 1,2 da linha de botões saiu e o play/pause não é mais maior que os outros.
+- **Botões da barra inferior** com hover redondo (raio de 400 px, círculo ou pílula). O favoritar do grupo da direita perdeu a borda retangular: só o ícone, como o microfone e o volume. O espaço entre microfone, favoritar e volume é de 4 px.
+- Só o cliente mudou: a versão sobe para disparar a build da imagem.
+
 ## 3.4.1 (2026-10-20)
 
 - **Margem lateral única de 16 px** no painel principal, dos dois lados e em todas as larguras: a mesma do painel da esquerda e da barra inferior. Um token só (`--layout-gutter`, em `_musix-tokens.scss`) alimenta o topo, as páginas e o painel da esquerda; o `clamp` de porcentagem que dava 32 px ou 80 px sumiu. Em telas largas o conteúdo ganha 128 px e o número de cards por linha pode subir. O layout alternativo e as telas de até 900 px não mudam.
