@@ -13,6 +13,11 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.5.2 (2026-10-21)
+
+- O ícone `ep-and-single` (Albums no menu lateral, "Go to album" e "Mark as EPs & Singles" nos menus) aparecia só como um círculo: a exportação SVG do Figma perdeu o anel interno. O SVG foi refeito a partir dos vetores do Figma (anel externo e anel interno, como um disco) e conferido pixel a pixel contra o screenshot do Figma. Os outros 39 ícones da pasta foram conferidos do mesmo jeito e batem.
+- Só o cliente mudou: a versão sobe para disparar a build da imagem.
+
 ## 3.5.1 (2026-10-20)
 
 - A seta dos itens com submenu, em todos os menus de contexto, passa a ser o `chevron-right` do Figma, em 10 x 10 px (a seta antiga tinha 8 x 12). O X de apagar o texto da busca ficou com 10 x 10 px (era 14 x 14).
