@@ -13,6 +13,17 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.6.0 (2026-10-21)
+
+- **Bug: a foto da playlist sumia.** Depois de enviar uma foto, a miniatura na página Playlists ficava quebrada e, ao reabrir a playlist, a foto não estava lá. A limpeza de imagens que roda depois de cada atualização estava com a comparação invertida: apagava a imagem e a miniatura das playlists e deixava os órfãos. Agora só apaga o que nenhuma playlist (de nenhum usuário) usa, e só dentro da pasta `playlist-img`, sem mexer em subpastas. **Uma playlist que já perdeu a imagem não volta** (o arquivo foi apagado): é preciso enviar a foto de novo. Imagens órfãs que já estão na pasta saem na próxima vez que alguma playlist for atualizada ou excluída.
+- **Capa sempre quadrada.** A foto enviada é cortada no centro (GIF quadro a quadro) e a miniatura é de 250 x 250. A opção "Show square cover image" e o ajuste de posição saíram. Enviar um GIF não dá mais erro.
+- **Página da playlist sem modal**, como a do álbum: o lápis ao lado do título troca o título por um campo (Enter salva, Esc ou sair do campo cancela; nome repetido avisa e o campo continua aberto); a foto se troca (ou se remove) no botão sobre a capa, como na foto do artista. Playlist nova, sem faixas e sem foto, mostra o placeholder dos artistas e as cores do design system, e não a tela preta. O "Edit | lixeira" do canto saiu (a lixeira foi para o menu).
+- **Banner da playlist** com play, favoritar e três pontinhos (Play next, Add to queue, Pin/Unpin, Rename, Delete). Favoritar playlist é novo (fica nas configurações da própria playlist; ainda não aparece na página Favorites). O pin saiu do canto do banner e vive nos menus, com o ícone do Figma.
+- **Menu de contexto no card da playlist** (botão direito): Pin/Unpin, Rename (no próprio card) e Add to queue.
+- **Ordenar as faixas arrastando**: o número da faixa vira o ícone `drag` no hover (nas telas pequenas o ícone fica fixo no começo da linha, arraste por toque). A fila de reprodução segue a nova ordem sem parar a música. Fica desligado nas playlists especiais e com o filtro ativo.
+- Servidor: `PUT /playlists/<id>/update` aceita `name`, `image` e `settings` opcionais (409 para nome repetido do mesmo usuário, 400 para nome vazio ou imagem inválida); novos `POST /playlists/<id>/favorite` e `POST /playlists/<id>/move-track`; `GET /playlists/<id>?limit=-1` passa a devolver todas as faixas (a última ficava de fora). `square_img` deixou de existir (o que já está no banco fica lá).
+- Sem dependência nova; `vue-virtual-draglist`, que não era usada, saiu do cliente.
+
 ## 3.5.2 (2026-10-21)
 
 - O ícone `ep-and-single` (Albums no menu lateral, "Go to album" e "Mark as EPs & Singles" nos menus) aparecia só como um círculo: a exportação SVG do Figma perdeu o anel interno. O SVG foi refeito a partir dos vetores do Figma (anel externo e anel interno, como um disco) e conferido pixel a pixel contra o screenshot do Figma. Os outros 39 ícones da pasta foram conferidos do mesmo jeito e batem.
