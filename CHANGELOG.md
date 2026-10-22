@@ -13,6 +13,11 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.6.1 (2026-10-21)
+
+- O menu de contexto (botão direito) do card da playlist ganhou o **Delete**, em vermelho e por último, separado dos outros três itens por um divisor. Ele abre a mesma confirmação de excluir do menu dos três pontinhos.
+- Só o cliente mudou: a versão sobe para disparar a build da imagem.
+
 ## 3.6.0 (2026-10-21)
 
 - **Bug: a foto da playlist sumia.** Depois de enviar uma foto, a miniatura na página Playlists ficava quebrada e, ao reabrir a playlist, a foto não estava lá. A limpeza de imagens que roda depois de cada atualização estava com a comparação invertida: apagava a imagem e a miniatura das playlists e deixava os órfãos. Agora só apaga o que nenhuma playlist (de nenhum usuário) usa, e só dentro da pasta `playlist-img`, sem mexer em subpastas. **Uma playlist que já perdeu a imagem não volta** (o arquivo foi apagado): é preciso enviar a foto de novo. Imagens órfãs que já estão na pasta saem na próxima vez que alguma playlist for atualizada ou excluída.
