@@ -4,7 +4,7 @@ This library contains all the functions related to playlists.
 import random
 import string
 import logging
-from PIL import Image, ImageSequence
+from PIL import Image, ImageOps, ImageSequence
 
 from musix import settings
 from musix.models.track import Track
@@ -13,10 +13,48 @@ from musix.store.tracks import TrackStore
 
 logger = logging.getLogger(__name__)
 
-def create_thumbnail(image: Image, img_name: str) -> str:
+# The cover of a playlist is always a square. The thumbnail is 250 x 250.
+THUMB_SIZE = 250
+
+
+def crop_square(image: Image.Image) -> Image.Image:
     """
-    Creates a 250 px high thumbnail from the Image.
-    It will keep the aspect ratio.
+    Cuts the image to the central square. A square image is returned as it is.
+    """
+    side = min(image.width, image.height)
+
+    if image.width == image.height:
+        return image
+
+    left = (image.width - side) // 2
+    top = (image.height - side) // 2
+
+    return image.crop((left, top, left + side, top + side))
+
+
+def prepare_image(image: Image.Image) -> Image.Image:
+    """
+    Applies the rotation of the camera (EXIF) and keeps a mode that WEBP can save.
+    """
+    image = ImageOps.exif_transpose(image)
+
+    if image.mode not in ("RGB", "RGBA"):
+        image = image.convert("RGBA" if "transparency" in image.info or "A" in image.mode else "RGB")
+
+    return image
+
+
+def get_gif_frames(image: Image.Image) -> tuple[list[Image.Image], int]:
+    """
+    Returns every frame of the GIF (square, RGBA) and the time of a frame in ms.
+    """
+    frames = [crop_square(frame.convert("RGBA")) for frame in ImageSequence.Iterator(image)]
+    return frames, int(image.info.get("duration", 100) or 100)
+
+
+def create_thumbnail(image: Image.Image, img_name: str) -> str:
+    """
+    Creates a 250 x 250 thumbnail from the Image (cut to the central square).
 
     Images are saved in the playlist-img path
 
@@ -24,10 +62,7 @@ def create_thumbnail(image: Image, img_name: str) -> str:
     :param img_name: Name of image.
     :return: Filename of image.
     """
-
-    aspect_ratio = image.width / image.height
-    new_w = round(250 * aspect_ratio)
-    thumb = image.resize((new_w, 250), Image.Resampling.LANCZOS)
+    thumb = crop_square(image).resize((THUMB_SIZE, THUMB_SIZE), Image.Resampling.LANCZOS)
 
     thumb_filename = "thumb_" + img_name
     thumb_path = settings.Paths().playlist_img_path / thumb_filename
@@ -37,10 +72,10 @@ def create_thumbnail(image: Image, img_name: str) -> str:
     return thumb_filename
 
 
-def create_gif_thumbnail(image: Image, img_name: str):
+def create_gif_thumbnail(image: Image.Image, img_name: str):
     """
-    Creates a 250 px high thumbnail from the provided GIF.
-    Keeps the aspect ratio.
+    Creates a 250 x 250 thumbnail from the provided GIF (every frame is cut to
+    the central square).
 
     Images are saved in the playlist-img path
 
@@ -51,25 +86,21 @@ def create_gif_thumbnail(image: Image, img_name: str):
     thumb_name = "thumb_" + img_name
     thumb_path = settings.Paths().playlist_img_path / thumb_name
 
-    frames = []
-    for frame in ImageSequence.Iterator(image):
-        aspect_ratio = frame.width / frame.height
-        new_w = round(250 * aspect_ratio)
-        thumb = frame.resize((new_w, 250), Image.Resampling.LANCZOS)
+    frames, duration = get_gif_frames(image)
+    frames = [f.resize((THUMB_SIZE, THUMB_SIZE), Image.Resampling.LANCZOS) for f in frames]
 
-        frames.append(thumb)
-
-    frames[0].save(thumb_path, save_all=True, append_images=frames[1:])
+    frames[0].save(
+        thumb_path, "webp", save_all=True, append_images=frames[1:], duration=duration, loop=0
+    )
 
     return thumb_name
 
 
-def save_p_image(img: Image, pid: int, content_type: str = None, filename: str = None) -> str:
+def save_p_image(img: Image.Image, pid: int, content_type: str = None, filename: str = None) -> str:
     """
-    Saves a playlist banner image and returns the filepath.
+    Saves a playlist cover (cut to the central square) and its thumbnail, and
+    returns the file name.
     """
-    # img = Image.open(file)
-
     random_str = "".join(random.choices(string.ascii_letters + string.digits, k=5))
 
     if not filename:
@@ -77,17 +108,17 @@ def save_p_image(img: Image, pid: int, content_type: str = None, filename: str =
 
     full_img_path = settings.Paths().playlist_img_path / filename
 
-    if content_type == "image/gif":
-        frames = []
+    if content_type == "image/gif" or img.format == "GIF":
+        frames, duration = get_gif_frames(img)
 
-        for frame in ImageSequence.Iterator(img):
-            frames.append(frame.copy())
-
-        frames[0].save(full_img_path, save_all=True, append_images=frames[1:])
-        create_gif_thumbnail(img, img_path=filename)
+        frames[0].save(
+            full_img_path, "webp", save_all=True, append_images=frames[1:], duration=duration, loop=0
+        )
+        create_gif_thumbnail(img, img_name=filename)
 
         return filename
 
+    img = crop_square(prepare_image(img))
     img.save(full_img_path, "webp")
     create_thumbnail(img, img_name=filename)
 
@@ -142,30 +173,36 @@ def get_first_4_images(
     return duplicate_images(images)
 
 
+
 def cleanup_playlist_images() -> None:
     """
-    Deletes all unlinked files in playlist-img folder.
-    All files not present in the PlaylistTable will get deleted
+    Deletes the files of the playlist-img folder that no playlist uses.
+
+    A playlist uses its image and the thumbnail of it (``thumb_`` + image).
+    The playlists of every user count, not only the one of the current user.
+    Only the files that are directly in the folder are looked at.
     """
     # Import here to avoid circular import
     from musix.db.userdata import PlaylistTable
 
-    playlists = PlaylistTable.get_all()
-    linked_images = {p.image for p in playlists if p.image and p.image != "None"}
+    in_use: set[str] = set()
+
+    for playlist in PlaylistTable.get_all(current_user=False):
+        if playlist.image and playlist.image != "None":
+            in_use.add(playlist.image)
+            in_use.add("thumb_" + playlist.image)
 
     playlist_dir = settings.Paths().playlist_img_path
 
-    # Find unlinked images (including thumbnails)
+    if not playlist_dir.is_dir():
+        return
+
     for file in playlist_dir.iterdir():
-        if not file.is_file():
+        # not stem: the table saves the name with the extension
+        if not file.is_file() or file.name in in_use:
             continue
 
-        name = file.name # not stem. PlaylistTable saves with extension
-        if file not in linked_images:
-            if name.removeprefix("thumb_") not in linked_images:
-                continue
-
-            try:
-                file.unlink(missing_ok=True)
-            except OSError as e:
-                logger.exception("could not delete file", exc_info=e)
+        try:
+            file.unlink(missing_ok=True)
+        except OSError as e:
+            logger.exception("could not delete file", exc_info=e)
