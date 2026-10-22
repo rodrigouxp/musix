@@ -26,7 +26,8 @@ def get_recently_played_playlist(limit: int = 100):
         [scrobble.trackhash for scrobble in scrobbles]
     )
 
-    date = datetime.fromtimestamp(tracks[0].lastplayed)
+    # nothing played yet: there is no last play, so "now"
+    date = datetime.fromtimestamp(tracks[0].lastplayed) if tracks else datetime.now()
     playlist._last_updated = date_string_to_time_passed(create_new_date(date))
 
     images = get_first_4_images(tracks=tracks)

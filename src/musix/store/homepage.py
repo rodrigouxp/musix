@@ -60,5 +60,9 @@ class HomepageStore:
             if len(cls.entries[entry].items)
         ]
 
-        recently_added = homedata.pop()
-        return homedata + pagedata + [recently_added]
+        # "Recently added" always comes last. It can be missing (nothing added yet): the last of the
+        # others is not it, and an empty list is not an error.
+        recently_added = [item for item in homedata if "recently_added" in item]
+        homedata = [item for item in homedata if "recently_added" not in item]
+
+        return homedata + pagedata + recently_added

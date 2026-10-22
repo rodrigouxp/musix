@@ -13,6 +13,14 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.6.2 (2026-10-21)
+
+- **Albums e Artists não trocavam de lista.** As duas telas são o mesmo componente e, ao ir de uma para a outra pelo menu, ele era reaproveitado: o título mudava, mas a lista continuava a da tela anterior (e só carregava de verdade depois de rolar). Agora cada rota começa do zero. O mesmo vale para ir de uma playlist para outra (a página ficava na primeira) e para "Recently added" e "Recently played".
+- Menu da faixa dentro de uma playlist: o item agora é "Remove From *nome da playlist*".
+- Arrastar faixas: a linha de destino usa `neutral/500` a 15% e o ícone `drag` ficou com 16 px, com o mesmo espaço dos dois lados quando ele aparece no lugar do número.
+- **A Home não quebra mais sem dados.** O servidor dava erro 500 na Home quando não havia nada tocado nem adicionado, e em "Recently played" quando nada tinha sido tocado; o cliente ficava com a Home em branco se a API falhasse. Agora a Home abre (vazia) e a lista de tocadas recentemente abre vazia.
+- Só o cliente mudou de forma visível; o servidor só trata os dois casos de lista vazia.
+
 ## 3.6.1 (2026-10-21)
 
 - O menu de contexto (botão direito) do card da playlist ganhou o **Delete**, em vermelho e por último, separado dos outros três itens por um divisor. Ele abre a mesma confirmação de excluir do menu dos três pontinhos.
