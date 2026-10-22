@@ -27,6 +27,7 @@ class Playlist:
     has_image: bool = False
     images: list[dict[str, str]] = dataclasses.field(default_factory=list)
     pinned: bool = False
+    is_favorite: bool = False
     _score: float = 0
     def __post_init__(self):
         self.count = len(self.trackhashes)
@@ -35,6 +36,7 @@ class Playlist:
             self.userid = get_current_userid()
 
         self.pinned = self.settings.get("pinned", False)
+        self.is_favorite = bool(self.settings.get("favorite", False))
         self.has_image = (
                 settings.Paths().playlist_img_path / str(self.image)
         ).exists()

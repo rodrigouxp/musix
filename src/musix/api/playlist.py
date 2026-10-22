@@ -43,7 +43,6 @@ def insert_playlist(name: str, image: str = None):
         "settings": {
             "has_gif": False,
             "banner_pos": 50,
-            "square_img": True if image else False,
             "pinned": False,
         },
     }
@@ -240,7 +239,8 @@ def get_playlist(path: PlaylistIDPath, query: GetPlaylistQuery):
         return {"msg": "Playlist not found"}, 404
 
     if query.limit == -1:
-        query.limit = len(playlist.trackhashes) - 1
+        # every track
+        query.limit = len(playlist.trackhashes)
 
     tracks = TrackStore.get_tracks_by_trackhashes(
         playlist.trackhashes[query.start : query.start + query.limit]
@@ -265,67 +265,97 @@ class FileStorage(_FileStorage):
         return core_schema.with_info_plain_validator_function(cls.validate)
 
 
+def get_playlist_id(path: PlaylistIDPath) -> int | None:
+    """
+    The numeric id of the path. Special playlists ("recentlyadded") have none.
+    """
+    try:
+        return int(path.playlistid)
+    except ValueError:
+        return None
+
+
 class UpdatePlaylistForm(BaseModel):
-    image: FileStorage = Field(description="The image file")
-    name: str = Field(..., description="The name of the playlist")
-    settings: str = Field(
-        ...,
-        description="The settings of the playlist",
-        json_schema_extra={
-            "example": '{"has_gif": false, "banner_pos": 50, "square_img": false, "pinned": false}'
-        },
+    # INFO: not `X | None`: flask-openapi3 reads a form field whose schema is an anyOf as JSON
+    # (a name like "2024" would arrive as a number and the file would not arrive at all)
+    image: FileStorage = Field(
+        None, description="The cover (cut to the central square). Without it the cover stays"
     )
+    name: str = Field(None, description="The name of the playlist. Without it the name stays")
+    settings: str = Field(
+        None,
+        description="The settings of the playlist. Without them the settings stay",
+        json_schema_extra={"example": '{"pinned": false}'},
+    )
+
+
+# the settings that the client can not set through the update
+SETTINGS_SET_BY_THE_SERVER = {"has_gif", "square_img", "favorite"}
 
 
 @api.put("/<playlistid>/update", methods=["PUT"])
 def update_playlist_info(path: PlaylistIDPath, form: UpdatePlaylistForm):
     """
     Update playlist
+
+    Every field is optional: only what is sent changes. The cover is cut to the
+    central square. A name that another playlist of the user has is a 409.
     """
-    playlistid = path.playlistid
-    db_playlist = PlaylistTable.get_by_id(playlistid)
+    playlist_id = get_playlist_id(path)
+    db_playlist = PlaylistTable.get_by_id(playlist_id) if playlist_id is not None else None
 
     if db_playlist is None:
         return {"error": "Playlist not found"}, 404
 
-    image = form.image
+    changes: dict[str, Any] = {"last_updated": create_new_date()}
+    settings = dict(db_playlist.settings)
+
+    if form.name is not None:
+        name = form.name.strip()
+
+        if not name:
+            return {"error": "The name can not be empty"}, 400
+
+        if PlaylistTable.check_exists_by_name(name, exclude_id=playlist_id):
+            return {"error": "Playlist already exists"}, 409
+
+        changes["name"] = name
+
+    if form.settings:
+        try:
+            sent = json.loads(form.settings)
+        except ValueError:
+            return {"error": "The settings are not valid JSON"}, 400
+
+        if not isinstance(sent, dict):
+            return {"error": "The settings are not valid JSON"}, 400
+
+        settings.update({k: v for k, v in sent.items() if k not in SETTINGS_SET_BY_THE_SERVER})
 
     if form.image:
-        image = form.image
-
-    settings = json.loads(form.settings)
-    settings["has_gif"] = False
-
-    playlist = {
-        "id": int(playlistid),
-        "image": db_playlist.image,
-        "last_updated": create_new_date(),
-        "name": str(form.name).strip(),
-        "settings": settings,
-    }
-
-    if image:
         try:
-            pil_image = Image.open(image)
-            content_type = image.content_type
-
-            playlist["image"] = playlistlib.save_p_image(
-                pil_image, playlistid, content_type
-            )
-
-            if image.content_type == "image/gif":
-                playlist["settings"]["has_gif"] = True
-
-        except UnidentifiedImageError:
+            pil_image = Image.open(form.image)
+            is_gif = pil_image.format == "GIF"
+            changes["image"] = playlistlib.save_p_image(pil_image, playlist_id, form.image.content_type)
+        except (UnidentifiedImageError, OSError, ValueError):
+            # a file that was half written is an orphan now
+            playlistlib.cleanup_playlist_images()
             return {"error": "Failed: Invalid image"}, 400
 
-    p_tuple = (*playlist.values(),)
+        settings["has_gif"] = is_gif
 
-    PlaylistTable.update_one(playlistid, playlist)
+    changes["settings"] = settings
+
+    PlaylistTable.update_one(playlist_id, changes)
     playlistlib.cleanup_playlist_images()
 
-    playlist = models.Playlist(*p_tuple)
-    playlist.last_updated = date_string_to_time_passed(playlist.last_updated)
+    playlist = PlaylistTable.get_by_id(playlist_id)
+    playlist._last_updated = date_string_to_time_passed(playlist.last_updated)
+
+    if not playlist.has_image:
+        playlist.images = playlistlib.get_first_4_images(trackhashes=playlist.trackhashes)
+
+    playlist.clear_lists()
 
     return {
         "data": playlist,
@@ -337,7 +367,8 @@ def pin_unpin_playlist(path: PlaylistIDPath):
     """
     Pin playlist.
     """
-    playlist = PlaylistTable.get_by_id(path.playlistid)
+    playlist_id = get_playlist_id(path)
+    playlist = PlaylistTable.get_by_id(playlist_id) if playlist_id is not None else None
 
     if playlist is None:
         return {"error": "Playlist not found"}, 404
@@ -349,7 +380,60 @@ def pin_unpin_playlist(path: PlaylistIDPath):
     except KeyError:
         settings["pinned"] = True
 
-    PlaylistTable.update_settings(path.playlistid, settings)
+    PlaylistTable.update_settings(playlist_id, settings)
+    return {"msg": "Done"}, 200
+
+
+@api.post("/<playlistid>/favorite")
+def favorite_playlist(path: PlaylistIDPath):
+    """
+    Favorite or unfavorite a playlist.
+
+    The favorite is kept in the settings of the playlist (like the pin), so the
+    favorites API, which only knows tracks, albums and artists, does not change.
+    """
+    playlist_id = get_playlist_id(path)
+    playlist = PlaylistTable.get_by_id(playlist_id) if playlist_id is not None else None
+
+    if playlist is None:
+        return {"error": "Playlist not found"}, 404
+
+    settings = dict(playlist.settings)
+    settings["favorite"] = not settings.get("favorite", False)
+
+    PlaylistTable.update_settings(playlist_id, settings)
+    return {"msg": "Done", "is_favorite": settings["favorite"]}, 200
+
+
+class MoveTrackBody(BaseModel):
+    trackhash: str = Field(..., description="The track to move")
+    to_index: int = Field(..., description="The position the track goes to (0 is the first)")
+
+
+@api.post("/<playlistid>/move-track")
+def move_track_in_playlist(path: PlaylistIDPath, body: MoveTrackBody):
+    """
+    Move a track to another position of the playlist.
+
+    404 if the playlist is not the user's or does not have the track, 400 if
+    to_index is not a position of the list.
+    """
+    playlist_id = get_playlist_id(path)
+    trackhashes = PlaylistTable.get_trackhashes(playlist_id) if playlist_id is not None else None
+
+    if trackhashes is None:
+        return {"error": "Playlist not found"}, 404
+
+    if body.trackhash not in trackhashes:
+        return {"error": "The track is not in the playlist"}, 404
+
+    if not 0 <= body.to_index < len(trackhashes):
+        return {"error": "to_index is outside of the playlist"}, 400
+
+    # the same position: nothing to save
+    if trackhashes.index(body.trackhash) != body.to_index:
+        PlaylistTable.move_track(playlist_id, body.trackhash, body.to_index)
+
     return {"msg": "Done"}, 200
 
 
@@ -364,6 +448,8 @@ def remove_playlist_image(path: PlaylistIDPath):
         return {"error": "Playlist not found"}, 404
 
     PlaylistTable.remove_image(path.playlistid)
+    PlaylistTable.update_settings(path.playlistid, {**playlist.settings, "has_gif": False})
+    playlistlib.cleanup_playlist_images()
 
     playlist.image = None
     playlist.thumb = None
@@ -371,7 +457,7 @@ def remove_playlist_image(path: PlaylistIDPath):
     playlist.has_image = False
 
     playlist.images = playlistlib.get_first_4_images(trackhashes=playlist.trackhashes)
-    playlist.last_updated = date_string_to_time_passed(playlist.last_updated)
+    playlist._last_updated = date_string_to_time_passed(playlist.last_updated)
 
     return {"playlist": playlist}, 200
 

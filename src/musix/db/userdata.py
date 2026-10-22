@@ -480,10 +480,17 @@ class PlaylistTable(Base):
         return result.lastrowid
 
     @classmethod
-    def check_exists_by_name(cls, name: str):
-        result = cls.execute(
-            select(cls).where((cls.name == name) & (cls.userid == get_current_userid()))
-        )
+    def check_exists_by_name(cls, name: str, exclude_id: int | None = None):
+        """
+        Whether the current user has a playlist with this name. ``exclude_id`` leaves
+        one playlist out of the search (the one that is being renamed).
+        """
+        query = select(cls).where((cls.name == name) & (cls.userid == get_current_userid()))
+
+        if exclude_id is not None:
+            query = query.where(cls.id != exclude_id)
+
+        result = cls.execute(query)
         return next(result).scalar() is not None
 
     @classmethod
@@ -535,6 +542,31 @@ class PlaylistTable(Base):
                     commit=True,
                 )
             )
+
+    @classmethod
+    def move_track(cls, id: int, trackhash: str, to_index: int):
+        """
+        Moves a track to another position of the playlist. The playlist and the
+        track must exist and ``to_index`` must be a position of the list (the
+        endpoint checks it). Nothing else of the playlist is changed.
+        """
+        dbtrackhashes = cls.get_trackhashes(id)
+        current = dbtrackhashes.index(trackhash)
+
+        if current == to_index:
+            return dbtrackhashes
+
+        dbtrackhashes.insert(to_index, dbtrackhashes.pop(current))
+
+        next(
+            cls.execute(
+                update(cls)
+                .where((cls.id == id) & (cls.userid == get_current_userid()))
+                .values(trackhashes=dbtrackhashes),
+                commit=True,
+            )
+        )
+        return dbtrackhashes
 
     @classmethod
     def get_by_id(cls, id: int):
