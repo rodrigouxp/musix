@@ -13,6 +13,12 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.8.0 (2026-10-23)
+
+- **"Add to playlist" mostra onde a música já está.** No submenu (menu da música e botão `add` da barra do player), as playlists que já têm a faixa ganham o ícone `check` (Figma `type=check`, 16 x 16, na cor do ícone do menu) logo depois do nome. Nome comprido continua cortando com reticências e o check fica fixo. Clicar numa playlist que já tem a música continua dando o aviso de "já está na playlist". Menus de álbum, artista, pasta e fila não mudaram. O servidor aceita `GET /playlists?trackhash=a,b` e devolve `has_track` em cada playlist (verdadeiro quando todas as faixas pedidas estão nela); sem a query a resposta é a mesma de antes.
+- **"Open in files" abre o Files do ZimaOS.** Antes o servidor tentava abrir um gerenciador de arquivos dentro do container, onde não existe nenhum, e nada acontecia. Agora o servidor devolve o modelo da URL e a pasta (no caminho que o Files mostra) e o navegador de quem usa abre uma aba nova no Files, na pasta da música. O endereço usa o mesmo host por onde você abriu o MUSIX (IP de casa, IP da VPN ou domínio, sem a porta), então funciona em qualquer endereço em que o Files responda. Sem configuração, ou com pasta que não está no mapeamento, o app avisa em vez de ficar mudo.
+- **Precisa configurar no ZimaOS:** as variáveis `MUSIX_HOST_PATHS` e `MUSIX_FILES_URL` no YAML do app (modelo em `deploy/zimaos-compose.yml`); o Watchtower recria o container com o YAML antigo, então o passo é manual.
+
 ## 3.7.0 (2026-10-23)
 
 - **Playlist no celular: o número da faixa voltou, e é a alça para ordenar.** Nas telas pequenas a linha mostra o número (cabe até 4 dígitos). Ao **segurar o número por cerca de 350 ms** (com uma vibração curta, onde o aparelho permite) ele vira o ícone `drag` e a linha passa a seguir o dedo; ao soltar, a faixa fica na nova posição. Um toque, ou rolar a lista, continua funcionando como antes: mover mais de 8 px antes dos 350 ms cancela a espera e a lista rola. No Android o menu da faixa não abre mais com o toque longo no número. No desktop nada mudou (passar o mouse troca o número pelo ícone).
