@@ -2,6 +2,7 @@
 All playlist-related routes.
 """
 
+import dataclasses
 import json
 from datetime import datetime
 import pathlib
@@ -95,13 +96,23 @@ def format_custom_playlist(playlist: models.Playlist, tracks: list[models.Track]
 
 class SendAllPlaylistsQuery(BaseModel):
     no_images: bool = Field(False, description="Whether to include images")
+    trackhash: str = Field(
+        "",
+        description="A trackhash, or several separated by commas. When it comes, each playlist "
+        "says in `has_track` if it has all of them",
+    )
 
 
 @api.get("")
 def send_all_playlists(query: SendAllPlaylistsQuery):
     """
     Gets all the playlists.
+
+    With `trackhash`, each playlist also has `has_track`: true when every trackhash asked is in it.
     """
+    asked = {h for h in query.trackhash.split(",") if h}
+    has_track: list[bool] = []
+
     playlists = PlaylistTable.get_all()
     playlists = sorted(
         playlists,
@@ -115,12 +126,22 @@ def send_all_playlists(query: SendAllPlaylistsQuery):
                 trackhashes=playlist.trackhashes
             )
 
+        # before clear_lists, which empties the list
+        has_track.append(asked.issubset(playlist.trackhashes))
         playlist.clear_lists()
 
     # playlists.sort(
     #     key=lambda p: datetime.strptime(p.last_updated, "%Y-%m-%d %H:%M:%S"),
     #     reverse=True,
     # )
+
+    if asked:
+        return {
+            "data": [
+                {**dataclasses.asdict(playlist), "has_track": has}
+                for playlist, has in zip(playlists, has_track)
+            ]
+        }
 
     return {"data": playlists}
 
