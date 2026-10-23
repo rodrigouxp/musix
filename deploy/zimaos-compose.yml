@@ -18,7 +18,7 @@ services:
     ports:
       - mode: ingress
         target: 1970
-        published: "1971"
+        published: "1972"
         protocol: tcp
     volumes:
       - type: bind
@@ -40,7 +40,7 @@ x-casaos:
     - amd64
   category: Media
   main: musix
-  port_map: "1971"
+  port_map: "1972"
   scheme: http
   index: /
   title:

@@ -13,6 +13,10 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.8.1 (2026-10-23)
+
+- O YAML de exemplo do ZimaOS (`deploy/zimaos-compose.yml`) publica o MUSIX na porta **1972** (era 1971). Só o modelo mudou; o app não.
+
 ## 3.8.0 (2026-10-23)
 
 - **"Add to playlist" mostra onde a música já está.** No submenu (menu da música e botão `add` da barra do player), as playlists que já têm a faixa ganham o ícone `check` (Figma `type=check`, 16 x 16, na cor do ícone do menu) logo depois do nome. Nome comprido continua cortando com reticências e o check fica fixo. Clicar numa playlist que já tem a música continua dando o aviso de "já está na playlist". Menus de álbum, artista, pasta e fila não mudaram. O servidor aceita `GET /playlists?trackhash=a,b` e devolve `has_track` em cada playlist (verdadeiro quando todas as faixas pedidas estão nela); sem a query a resposta é a mesma de antes.
