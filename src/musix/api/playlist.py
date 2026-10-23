@@ -407,7 +407,15 @@ def favorite_playlist(path: PlaylistIDPath):
 
 class MoveTrackBody(BaseModel):
     trackhash: str = Field(..., description="The track to move")
-    to_index: int = Field(..., description="The position the track goes to (0 is the first)")
+    to_index: int | None = Field(
+        None, description="The position the track goes to (0 is the first)"
+    )
+    after_trackhash: str | None = Field(
+        None,
+        description="Or: the track it goes right after. It is how the client says it when the "
+        "playlist has tracks that are not in the library anymore (the client does not see them, so "
+        "its positions are not the ones of the list)",
+    )
 
 
 @api.post("/<playlistid>/move-track")
@@ -416,7 +424,7 @@ def move_track_in_playlist(path: PlaylistIDPath, body: MoveTrackBody):
     Move a track to another position of the playlist.
 
     404 if the playlist is not the user's or does not have the track, 400 if
-    to_index is not a position of the list.
+    to_index is not a position of the list (or neither to_index nor after_trackhash was sent).
     """
     playlist_id = get_playlist_id(path)
     trackhashes = PlaylistTable.get_trackhashes(playlist_id) if playlist_id is not None else None
@@ -427,12 +435,26 @@ def move_track_in_playlist(path: PlaylistIDPath, body: MoveTrackBody):
     if body.trackhash not in trackhashes:
         return {"error": "The track is not in the playlist"}, 404
 
-    if not 0 <= body.to_index < len(trackhashes):
+    if body.after_trackhash is not None:
+        others = [h for h in trackhashes if h != body.trackhash]
+
+        if body.after_trackhash == body.trackhash:
+            to_index = trackhashes.index(body.trackhash)
+        elif body.after_trackhash not in others:
+            return {"error": "The track to go after is not in the playlist"}, 404
+        else:
+            to_index = others.index(body.after_trackhash) + 1
+    elif body.to_index is not None:
+        to_index = body.to_index
+    else:
+        return {"error": "Send to_index or after_trackhash"}, 400
+
+    if not 0 <= to_index < len(trackhashes):
         return {"error": "to_index is outside of the playlist"}, 400
 
     # the same position: nothing to save
-    if trackhashes.index(body.trackhash) != body.to_index:
-        PlaylistTable.move_track(playlist_id, body.trackhash, body.to_index)
+    if trackhashes.index(body.trackhash) != to_index:
+        PlaylistTable.move_track(playlist_id, body.trackhash, to_index)
 
     return {"msg": "Done"}, 200
 

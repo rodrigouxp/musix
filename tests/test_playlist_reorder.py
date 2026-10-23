@@ -68,6 +68,46 @@ def test_moves_a_track_to_the_end(http, pid):
     assert order(pid) == ["b", "c", "d", "e", "a"]
 
 
+def move_after(http, pid, trackhash, after):
+    return http.post(f"/playlists/{pid}/move-track", json={"trackhash": trackhash, "after_trackhash": after})
+
+
+def test_moves_a_track_right_after_another(http, pid):
+    assert move_after(http, pid, "a", "d").status_code == 200
+    assert order(pid) == ["b", "c", "d", "a", "e"]
+
+    assert move_after(http, pid, "e", "a").status_code == 200
+    assert order(pid) == ["b", "c", "d", "a", "e"]
+
+    assert move_after(http, pid, "e", "b").status_code == 200
+    assert order(pid) == ["b", "e", "c", "d", "a"]
+
+
+def test_after_itself_or_where_it_already_is_does_not_change_anything(http, pid):
+    assert move_after(http, pid, "c", "c").status_code == 200
+    assert move_after(http, pid, "c", "b").status_code == 200
+    assert order(pid) == HASHES
+
+
+def test_after_a_track_that_is_not_in_the_playlist_is_a_404(http, pid):
+    assert move_after(http, pid, "a", "zzz").status_code == 404
+    assert order(pid) == HASHES
+
+
+def test_without_to_index_or_after_it_is_a_400(http, pid):
+    res = http.post(f"/playlists/{pid}/move-track", json={"trackhash": "a"})
+
+    assert res.status_code == 400
+
+
+def test_hashes_of_tracks_that_are_not_in_the_library_do_not_confuse_the_move(http, pid):
+    # the client only sees the tracks it has, so it says "after the one above"
+    PlaylistTable.update_one(pid, {"trackhashes": ["a", "gone", "b", "c", "d", "e"]})
+
+    assert move_after(http, pid, "a", "b").status_code == 200
+    assert order(pid) == ["gone", "b", "a", "c", "d", "e"]
+
+
 def test_the_same_position_is_a_success_and_does_not_save(http, pid, monkeypatch):
     def fail(*args, **kwargs):
         raise AssertionError("nothing should be saved")
