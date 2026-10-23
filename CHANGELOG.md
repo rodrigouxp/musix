@@ -13,6 +13,14 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.7.0 (2026-10-23)
+
+- **Playlist no celular: o número da faixa voltou, e é a alça para ordenar.** Nas telas pequenas a linha mostra o número (cabe até 4 dígitos). Ao **segurar o número por cerca de 350 ms** (com uma vibração curta, onde o aparelho permite) ele vira o ícone `drag` e a linha passa a seguir o dedo; ao soltar, a faixa fica na nova posição. Um toque, ou rolar a lista, continua funcionando como antes: mover mais de 8 px antes dos 350 ms cancela a espera e a lista rola. No Android o menu da faixa não abre mais com o toque longo no número. No desktop nada mudou (passar o mouse troca o número pelo ícone).
+- O servidor aceita mover a faixa dizendo **depois de qual faixa ela vai** (`after_trackhash`), além da posição (`to_index`, que continua valendo). O cliente passou a usar a faixa de cima: uma playlist pode ter faixas que saíram da biblioteca, que a página não mostra, e a posição da página não é a da lista do servidor (a faixa ia parar no lugar errado).
+- Ao ordenar, o cliente carrega a playlist inteira de uma vez (antes pedia "o resto" pela quantidade de linhas e, em playlists com faixa fora da biblioteca, repetia a última).
+- "11 tracks" com espaço (era "11tracks") no cabeçalho da playlist e no card.
+- **Ainda não entraram** (esperando o que só o Rodrigo pode dar): o ícone de check (`check.svg`) no submenu "Add to playlist" e o "Open in files" (falta o endereço do Files do ZimaOS).
+
 ## 3.6.2 (2026-10-21)
 
 - **Albums e Artists não trocavam de lista.** As duas telas são o mesmo componente e, ao ir de uma para a outra pelo menu, ele era reaproveitado: o título mudava, mas a lista continuava a da tela anterior (e só carregava de verdade depois de rolar). Agora cada rota começa do zero. O mesmo vale para ir de uma playlist para outra (a página ficava na primeira) e para "Recently added" e "Recently played".
