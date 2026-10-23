@@ -13,6 +13,10 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.8.2 (2026-10-23)
+
+- O `check` do submenu "Add to playlist" ficou com 18 x 18 (a medida dos ícones do menu) e foi para o canto direito do item: o nome fica de um lado e o ícone do outro (`space-between`), com o mesmo espaço à esquerda do nome e à direita do ícone. Nome comprido continua cortando com reticências, sem empurrar o check. Só o cliente mudou.
+
 ## 3.8.1 (2026-10-23)
 
 - O YAML de exemplo do ZimaOS (`deploy/zimaos-compose.yml`) publica o MUSIX na porta **1972** (era 1971). Só o modelo mudou; o app não.
