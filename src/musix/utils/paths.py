@@ -1,5 +1,5 @@
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from musix.settings import Paths
 from musix.config import UserConfig
@@ -24,6 +24,48 @@ def is_path_within_root_dirs(filepath: str) -> bool:
             return True
 
     return False
+
+
+def host_path_pairs() -> list[tuple[PurePosixPath, PurePosixPath]]:
+    """
+    The pairs of `MUSIX_HOST_PATHS` (`/music=/HD_1_TB/Músicas;/other=/HD_1_TB/Other`):
+    the folder as the container sees it, and the same folder as the file manager of the host shows it.
+    """
+    pairs = []
+
+    for pair in os.environ.get("MUSIX_HOST_PATHS", "").split(";"):
+        container, sep, host = pair.partition("=")
+        container, host = container.strip(), host.strip()
+
+        if sep and container and host:
+            pairs.append((PurePosixPath(container), PurePosixPath(host)))
+
+    return pairs
+
+
+def to_host_path(path: str) -> str | None:
+    """
+    Turns a path of the container into the path of the same folder on the host (see
+    `MUSIX_HOST_PATHS`). The first pair that holds the path wins, compared by path parts, not by
+    text (`/music2` is not inside `/music`). None when there is no configuration or no pair holds it.
+    """
+    parts = PurePosixPath(path.replace("\\", "/")).parts
+
+    for container, host in host_path_pairs():
+        prefix = container.parts
+
+        if parts[: len(prefix)] == prefix:
+            return PurePosixPath(host, *parts[len(prefix) :]).as_posix()
+
+    return None
+
+
+def files_url_template() -> str | None:
+    """
+    The address of the file manager of the host, from `MUSIX_FILES_URL`: `{origin}` is where the
+    user opened the app (the client fills it) and `{path}` the folder (see `to_host_path`).
+    """
+    return os.environ.get("MUSIX_FILES_URL", "").strip() or None
 
 
 def get_client_files_extensions():

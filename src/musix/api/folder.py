@@ -12,7 +12,6 @@ import psutil
 from flask_openapi3 import Tag
 from pydantic import BaseModel, Field
 from flask_openapi3 import APIBlueprint
-from showinfm import show_in_file_manager
 
 from musix import settings
 from musix.config import UserConfig
@@ -23,7 +22,12 @@ from musix.utils.wintools import is_windows
 from musix.db.userdata import FavoritesTable, PlaylistTable
 from musix.lib.folderslib import get_files_and_dirs, get_folders
 from musix.serializers.track import serialize_track, serialize_tracks
-from musix.utils.paths import is_path_within_root_dirs
+from musix.utils.paths import (
+    files_url_template,
+    host_path_pairs,
+    is_path_within_root_dirs,
+    to_host_path,
+)
 
 tag = Tag(name="Folders", description="Get folders and tracks in a directory")
 api = APIBlueprint("folder", __name__, url_prefix="/folder", abp_tags=[tag])
@@ -325,8 +329,11 @@ def open_in_file_manager(query: FolderOpenInFileManagerQuery):
     """
     Open in file manager
 
-    Opens the given path in the file manager on the host machine.
-    Path must be within configured root directories.
+    Where the folder of the path is in the file manager of the host, for the client to open it
+    in the browser of the user (the server runs in a container: it has no file manager to open).
+    Path must be within configured root directories. Needs `MUSIX_HOST_PATHS` and
+    `MUSIX_FILES_URL` (501 `not_configured` without them, 501 `not_mapped` when no pair holds
+    the path).
     """
     # Resolve path to prevent directory traversal
     resolved_path = Path(query.path).resolve()
@@ -338,9 +345,19 @@ def open_in_file_manager(query: FolderOpenInFileManagerQuery):
     if not resolved_path.exists():
         return {"success": False, "error": "Path does not exist"}, 404
 
-    show_in_file_manager(str(resolved_path))
+    url_template = files_url_template()
 
-    return {"success": True}
+    if url_template is None or not host_path_pairs():
+        return {"success": False, "error": "not_configured"}, 501
+
+    # a song opens its folder
+    folder = resolved_path.parent if resolved_path.is_file() else resolved_path
+    host_path = to_host_path(folder.as_posix())
+
+    if host_path is None:
+        return {"success": False, "error": "not_mapped"}, 501
+
+    return {"success": True, "url_template": url_template, "path": host_path}
 
 
 class GetTracksInPathQuery(BaseModel):

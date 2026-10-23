@@ -7,6 +7,14 @@ services:
     pull_policy: always
     restart: unless-stopped
     cpu_shares: 90
+    environment:
+      # "Open in files": abre a pasta da musica no app Files do ZimaOS (em uma aba nova).
+      # MUSIX_HOST_PATHS troca o caminho do container pelo que o Files mostra (o mesmo da
+      # pasta de musica montada em /music, sem o /media do inicio); varios pares separados por ;
+      # MUSIX_FILES_URL e o endereco do Files: {origin} vira o endereco por onde voce abriu o MUSIX
+      # (IP de casa, da VPN ou dominio, sem a porta) e {path} a pasta.
+      MUSIX_HOST_PATHS: "/music=/HD_1_TB/Músicas"
+      MUSIX_FILES_URL: "{origin}/modules/icewhale_files/index.html#/files/{path}"
     ports:
       - mode: ingress
         target: 1970
