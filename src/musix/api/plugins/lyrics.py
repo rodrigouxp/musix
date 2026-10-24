@@ -2,6 +2,8 @@ from flask_openapi3 import Tag
 from flask_openapi3 import APIBlueprint
 from pydantic import Field
 from musix.api.apischemas import TrackHashSchema
+from musix.api.auth import admin_required
+from musix.lib import lyricsbatch
 from musix.lib.lyrics import Lyrics as Lyrics_class
 from musix.lib.lyricsfinder import LyricsQuery, find_and_save, lyrics_plugin_on
 from musix.settings import Defaults
@@ -87,3 +89,58 @@ def search_lyrics(body: LyricsSearchBody):
             answer["synced"] = True
 
     return answer, 200
+
+
+@api.get("/missing/count")
+@admin_required()
+def count_missing_lyrics():
+    """
+    How many songs have no lyrics
+
+    A song has lyrics with a .lrc with text, lyrics in its tags or the .lrc of a duplicate. The songs
+    that had no lyrics online recently are not counted (they are not looked up again for a while).
+    """
+    missing, total = lyricsbatch.missing_tracks()
+
+    return {"missing": len(missing), "total": total, "plugin_on": lyrics_plugin_on()}
+
+
+@api.post("/missing/start")
+@admin_required()
+def start_missing_lyrics():
+    """
+    Find missing lyrics
+
+    Starts the job that looks up, in the background, the lyrics of the songs that have none, and
+    saves them as .lrc files next to the songs. 409 when it is running already, 400 with the plugin off.
+    """
+    if lyricsbatch.batch.status()["running"]:
+        return {"reason": "already_running"}, 409
+
+    if not lyrics_plugin_on():
+        return {"reason": "plugin_off"}, 400
+
+    if not lyricsbatch.batch.start():
+        return {"reason": "already_running"}, 409
+
+    return lyricsbatch.batch.status(), 200
+
+
+@api.get("/missing/status")
+@admin_required()
+def missing_lyrics_status():
+    """
+    The progress of the job that looks up the missing lyrics
+    """
+    return lyricsbatch.batch.status()
+
+
+@api.post("/missing/cancel")
+@admin_required()
+def cancel_missing_lyrics():
+    """
+    Stops the job after the song in progress
+    """
+    lyricsbatch.batch.cancel()
+
+    return lyricsbatch.batch.status()

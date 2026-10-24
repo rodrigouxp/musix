@@ -415,13 +415,8 @@ def _write_misses(misses: dict[str, dict[str, str]]) -> None:
         tmp.unlink(missing_ok=True)
 
 
-def get_miss(trackhash: str, now: datetime | None = None) -> str | None:
-    """The reason the track had no lyrics, if that answer is still fresh; else None."""
-    now = now or datetime.now()
-
-    with _misses_lock:
-        entry = _read_misses().get(trackhash)
-
+def _fresh_reason(entry: Any, now: datetime) -> str | None:
+    """The reason of an entry of the memory, if it has not expired."""
     if not isinstance(entry, dict):
         return None
 
@@ -437,6 +432,16 @@ def get_miss(trackhash: str, now: datetime | None = None) -> str | None:
         return None
 
     return reason
+
+
+def get_miss(trackhash: str, now: datetime | None = None) -> str | None:
+    """The reason the track had no lyrics, if that answer is still fresh; else None."""
+    now = now or datetime.now()
+
+    with _misses_lock:
+        entry = _read_misses().get(trackhash)
+
+    return _fresh_reason(entry, now)
 
 
 def record_miss(trackhash: str, reason: str, now: datetime | None = None) -> None:
@@ -464,9 +469,9 @@ def recent_misses(now: datetime | None = None) -> set[str]:
     now = now or datetime.now()
 
     with _misses_lock:
-        hashes = list(_read_misses())
+        misses = _read_misses()
 
-    return {h for h in hashes if get_miss(h, now) is not None}
+    return {h for h, entry in misses.items() if _fresh_reason(entry, now) is not None}
 
 
 # # # # # # # # # # # # # # # # # # # #
