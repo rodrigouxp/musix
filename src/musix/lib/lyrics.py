@@ -1,5 +1,6 @@
 import datetime
 import pathlib
+import re
 from pathlib import Path
 
 from musix.store.tracks import TrackStore
@@ -8,6 +9,39 @@ from musix.store.tracks import TrackStore
 # # # # # # # # # # # # # # # # # # # #
 # Functions for parsing lyrics lines  #
 # # # # # # # # # # # # # # # # # # # #
+
+# the meta tags of a .lrc file ([ar:Queen], [offset:+500]...)
+SUPPORTED_METATAGS = {
+    "ti": "title",
+    "ar": "artist",
+    "al": "album",
+    "au": "author",
+    "lr": "lyricist",
+    "length": "length",
+    "by": "lrc_author",
+    "offset": "offset",
+    "re": "recorder",
+    "tool": "tool",
+    "ve": "version",
+}
+
+_TIME_TAG = re.compile(r"\d+:\d+(?:\.\d+)?")
+
+
+def _tag_type(content: str) -> str | None:
+    """
+    What the text inside of brackets is: a "time" tag ([00:12.34]), a "meta" tag ([ar:Queen]) or
+    None, which is just text of the lyrics ([Chorus], [Verse 1: Name], [ ]).
+    """
+    if _TIME_TAG.fullmatch(content):
+        return "time"
+
+    name, sep, _ = content.partition(":")
+
+    if sep and name.strip().lower() in SUPPORTED_METATAGS:
+        return "meta"
+
+    return None
 
 
 def parse_lyrics_lines(lyrics: str) -> list[dict]:
@@ -26,27 +60,22 @@ def parse_lyrics_lines(lyrics: str) -> list[dict]:
     entries = []
     for line in lyrics.splitlines():
         data = {"tag_types": [], "tags": []}
-        if line.startswith("["):
-            # loop until all tags are parsed in line
-            while True:
-                if "[" in line and "]" in line:  # second tag
-                    bracket_content, after_content = line.split("]", 1)
-                    bracket_content = bracket_content.removeprefix("[")
+        rest = line
 
-                    data["tags"].append(bracket_content)
-                    data["body"] = after_content
+        # the tags at the start of the line; what comes after them is the text
+        while rest.startswith("["):
+            end = rest.find("]")
+            tag_type = _tag_type(rest[1:end]) if end > 0 else None
 
-                    line = after_content
+            if tag_type is None:
+                break
 
-                    # check which tag type it is
-                    if bracket_content[0].isnumeric():
-                        data["tag_types"].append("time")
+            data["tags"].append(rest[1:end])
+            data["tag_types"].append(tag_type)
+            rest = rest[end + 1 :]
 
-                    elif bracket_content[0].isalpha():
-                        data["tag_types"].append("meta")
-                else:
-                    # if no brackets inside the line, there is also no tag.
-                    break
+        if data["tags"]:
+            data["body"] = rest
 
         elif line.startswith("#"):
             data["tag_types"].append("comment")
@@ -125,25 +154,12 @@ def parse_time_tag(lines: list[dict]) -> list[dict]:
 
 
 class Lyrics:
-    SUPPORTED_METATAGS = {
-        "ti": "title",
-        "ar": "artist",
-        "al": "album",
-        "au": "author",
-        "lr": "lyricist",
-        "length": "length",
-        "by": "lrc_author",
-        "offset": "offset",
-        "re": "recorder",
-        "tool": "tool",
-        "ve": "version",
-    }
+    SUPPORTED_METATAGS = SUPPORTED_METATAGS
 
     lyrics: str
     parsed_lyrics: list[dict]
-    meta: dict = {}
-
-    is_synced: bool = False
+    meta: dict
+    is_synced: bool
 
     def __init__(self, lyrics: str = ""):
         """
@@ -156,6 +172,14 @@ class Lyrics:
 
         if isinstance(lyrics, list):
             lyrics = lyrics[0]
+
+        # each lyrics has its own (a class attribute would be shared: the [offset] of one song
+        # would move the lines of the next ones)
+        self.meta = {}
+        self.is_synced = False
+        self.parsed_lyrics = []
+
+        lyrics = lyrics.removeprefix("\ufeff")
 
         prefixes = sorted({"engdesc", "desc"}, key=len, reverse=True)
         for prefix in prefixes:
@@ -172,7 +196,7 @@ class Lyrics:
         for line in meta:
             for tag in line["tags"]:
                 name, body = tag.split(":", 1)
-                name = name.lower()
+                name = name.strip().lower()
 
                 dict_name = self.SUPPORTED_METATAGS.get(name, name)
                 self.meta[dict_name] = body
@@ -213,7 +237,9 @@ class Lyrics:
 
             minutes = int(minutes)
             seconds = int(seconds)
-            milli = int(milli)
+            # the part after the dot is a decimal fraction of the second: ".5" is 500 ms and ".34" is
+            # 340 ms (it used to be read as 5 ms and 34 ms)
+            milli = int(milli.ljust(3, "0")[:3])
 
             seconds = datetime.timedelta(
                 minutes=minutes, seconds=seconds, milliseconds=milli
@@ -221,7 +247,10 @@ class Lyrics:
 
             offset = 0
             if "offset" in self.meta:
-                offset = int(self.meta["offset"])  # offset in milliseconds
+                try:
+                    offset = int(self.meta["offset"])  # offset in milliseconds
+                except ValueError:
+                    offset = 0
 
             milliseconds = seconds * 1000 - offset
             lyrics.append({"time": milliseconds, "text": entry["body"]})
