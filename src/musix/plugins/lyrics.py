@@ -52,6 +52,9 @@ class LyricsProvider(LRCProvider):
     def __init__(self) -> None:
         super().__init__()
         self.token = None
+        # the last request could not be answered (no connection, an error of the server): it tells
+        # "could not ask" apart from "asked and there is nothing"
+        self.network_error = False
         self.session.headers.update(
             {
                 "authority": "apic-desktop.musixmatch.com",
@@ -78,11 +81,14 @@ class LyricsProvider(LRCProvider):
         try:
             response = self.session.get(url, params=query, timeout=10)
         except:
+            self.network_error = True
             return None
 
         if response is not None and response.ok:
+            self.network_error = False
             return response
 
+        self.network_error = True
         return None
 
     def _get_token(self):

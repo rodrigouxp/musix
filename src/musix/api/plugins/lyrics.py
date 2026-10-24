@@ -3,12 +3,10 @@ from flask_openapi3 import APIBlueprint
 from pydantic import Field
 from musix.api.apischemas import TrackHashSchema
 from musix.lib.lyrics import Lyrics as Lyrics_class
-
-from musix.plugins.lyrics import Lyrics
+from musix.lib.lyricsfinder import LyricsQuery, find_and_save, lyrics_plugin_on
 from musix.settings import Defaults
-from musix.utils.hashing import create_hash
 
-bp_tag = Tag(name="Lyrics Plugin", description="Musixmatch lyrics plugin")
+bp_tag = Tag(name="Lyrics Plugin", description="Online lyrics finder (LRCLIB and Musixmatch)")
 api = APIBlueprint(
     "lyricsplugin", __name__, url_prefix="/plugins/lyrics", abp_tags=[bp_tag]
 )
@@ -26,41 +24,66 @@ class LyricsSearchBody(TrackHashSchema):
         description="Track filepath to save the lyrics file relative to",
         example="/home/cwilvx/temp/crazy song.mp3",
     )
+    duration: int | None = Field(
+        None,
+        description="The duration of the track in seconds (the lyrics of another version are left out)",
+    )
+    auto: bool = Field(
+        False,
+        description="The search was started by the app, not by the user: a song that had no lyrics "
+        "online recently is not looked up again",
+    )
+    replace_unsynced: bool = Field(
+        False,
+        description="A .lrc with plain lyrics may be replaced by synced ones",
+    )
 
 
 @api.post("/search")
 def search_lyrics(body: LyricsSearchBody):
     """
-    Search for lyrics by title and artist
+    Search for lyrics online
+
+    Looks the lyrics up on LRCLIB (then Musixmatch) and saves them as the .lrc of the song. Always answers
+    200: `lyrics` is the synced list when the lyrics found are synced (plain ones are saved too: the
+    client loads them again with `POST /lyrics`), and `reason` says why there is nothing:
+    plugin_off, not_found, instrumental, network or write_failed.
     """
-    title = body.title
-    artist = body.artist
-    album = body.album
-    filepath = body.filepath
-    trackhash = body.trackhash
+    answer = {
+        "trackhash": body.trackhash,
+        "lyrics": None,
+        "synced": False,
+        "source": None,
+        "reason": None,
+    }
 
-    finder = Lyrics()
-    data = finder.search_lyrics_by_title_and_artist(title, artist)
+    if not lyrics_plugin_on():
+        answer["reason"] = "plugin_off"
+        return answer, 200
 
-    if not data:
-        return {"trackhash": trackhash, "lyrics": None}
+    query = LyricsQuery(
+        trackhash=body.trackhash,
+        title=body.title,
+        artist=body.artist,
+        album=body.album,
+        duration=body.duration or 0,
+        filepath=body.filepath,
+    )
+    result = find_and_save(
+        query, use_cache=body.auto, replace_unsynced=body.replace_unsynced
+    )
 
-    perfect_match = data[0]
+    answer["reason"] = result.reason
+    answer["source"] = result.source
 
-    for track in data:
-        i_title = track["title"]
-        i_album = track["album"]
+    if result.reason == "write_failed":
+        answer["path"] = result.detail
 
-        if create_hash(i_title) == create_hash(title) and create_hash(
-            i_album
-        ) == create_hash(album):
-            perfect_match = track
+    if result.text:
+        lyrics = Lyrics_class(result.text)
 
-    track_id = perfect_match["track_id"]
-    lrc = finder.download_lyrics(track_id, filepath)
+        if lyrics.is_synced:
+            answer["lyrics"] = lyrics.format_synced_lyrics()
+            answer["synced"] = True
 
-    if lrc is not None:
-        lyrics = Lyrics_class(lrc)
-        return {"trackhash": trackhash, "lyrics": lyrics.format_synced_lyrics()}, 200
-
-    return {"trackhash": trackhash, "lyrics": lrc}, 200
+    return answer, 200
