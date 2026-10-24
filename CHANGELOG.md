@@ -13,6 +13,10 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.9.1 (2026-10-24)
+
+- **"Clear queue" mantém a música que está tocando.** Antes ele esvaziava a fila inteira: a faixa continuava tocando, mas sumia da fila, do Now Playing e das informações da barra do player. Agora a fila fica só com a faixa atual (destacada, a origem "Album ..." continua), a música não para e o player segue mostrando título, artista e capa. Sem nada tocando, ele esvazia tudo como antes. Só o cliente mudou; adicionar a fila a uma playlist continua igual.
+
 ## 3.9.0 (2026-10-24)
 
 - **Letras pelo LRCLIB.** A busca online agora pergunta primeiro ao [LRCLIB](https://lrclib.net/) (aberto, sem chave) e só depois ao Musixmatch. Ela tenta o título como a faixa tem, depois o título sem enfeites de versão ("(feat. X)", "(Remix)", "- Remastered 2011", "(Radio Edit)"...) com o primeiro artista, e por fim uma busca em que só vale a letra de duração parecida (até 3 s de diferença: letra de outra versão sai do tempo). **Letra simples (sem marcas de tempo) também é aceita** e salva como `.lrc`; a sincronizada é preferida. Instrumental é reconhecido. O arquivo é gravado como veio (UTF-8, com quebra de linha no fim), de forma atômica, só dentro das pastas raiz, e **nunca sobrescreve um `.lrc` que já tenha texto** (um `.lrc` vazio conta como inexistente; a única troca permitida é uma letra simples por uma sincronizada quando "Override unsynced lyrics" está ligado).
