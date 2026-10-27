@@ -13,6 +13,17 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.12.0 (2026-10-27)
+
+- **Barra do player (acima de 900 px) igual ao PlayerBar do Figma** (nó `12355:646`). A barra de baixo ganha o fundo `background` (`#0d0d0d`) e a borda de cima de 2 px em `neutral/900`, com 80 px de altura útil e padding de 12 e 20 px. Os tokens vivem no bloco novo `--playerbar-*` de `_musix-tokens.scss`; nenhuma cor do Figma mudou (os 23 estilos já eram iguais).
+- **Controles:** os cinco botões do centro (shuffle, anterior, play, próximo e repeat) são círculos de 34 px, com 28 px entre eles, e o play tem o mesmo tamanho dos outros. Todos os ícones têm a mesma caixa de 20 px (o glifo de 20 no viewBox de 24), então a proporção entre o ícone e o círculo do hover é a mesma em todos. O hover é o círculo cheio em `neutral/900` (antes `#1a1919`).
+- **Esquerda:** capa de 56 px (raio 4, sombra do Figma), texto em Roboto Bold 14/20 (título `neutral/100`, artistas `neutral/500`), 14 px entre a capa e o texto e 40 px entre a música, o favorite e o add. Os dois ícones têm 20 px e o hover é um círculo de 28 px (no Figma eles não têm círculo: decisão minha).
+- **Linha do tempo:** 502 px (tempo, barra de 400 x 4 e tempo, com 12 px entre eles), colada nos botões. Os tempos viram "pílulas" em `neutral/900` (raio 4, padding 1 e 4, Roboto Bold 12/20 branco). O trecho já carregado da barra usa `neutral/700` (decisão minha: não existe no Figma). A bolinha da barra tem 14 px e continua aparecendo só com o mouse na barra.
+- **Direita:** `lyrics` e `speaker` em círculos de 28 px com ícone de 20 px, 40 px entre os dois grupos e 8 px entre o speaker e a barra do volume (94 x 4, bolinha de 14).
+- **Ícones novos:** `shuffle` e `repeat` do Figma (nós `12355:544` e `12355:550`, 41 SVGs na pasta `figma/`); a barra usa também o `play` e o `pause` do Figma (o `transform` que consertava o `pause.svg` antigo saiu). O Figma ainda não tem o "repetir uma": o estado usa o `repeat-one.svg` antigo.
+- **Telas até 900 px:** o layout não mudou; só o desenho dos botões shuffle, repeat, play e pause, que agora são os do Figma (o glifo do play passou de 13,8 x 15,4 para 18 x 20 px e o do pause de 8,1 x 14,8 para 16 x 20 px).
+- Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.11.3 (2026-10-27)
 
 - **Controles do player com hover em círculo perfeito.** Cada botão da barra de baixo (shuffle, anterior, play, próximo e repeat) passa de 48 x 40 px (a "pílula") para 28 x 28 px, com o hover redondo igual nos cinco, e o espaço entre eles passa a 12 px. Todos os glifos cabem em 14 x 14 px (o lado maior vale 14): anterior e próximo ficam em 14 x 14, o play em 12,5 x 14 e o shuffle e o repeat, mais largos que altos, em 14 x 11,1 e 14 x 11,9. O pause segue a mesma medida (escala do desenho de 14,82 px para 14 px; conferido só pela conta, porque o app de teste fica carregando e não mostra o pause). Antes os glifos tinham tamanhos diferentes entre si (o anterior e o próximo eram maiores que os outros).
