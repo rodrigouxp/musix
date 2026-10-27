@@ -13,6 +13,11 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.11.1 (2026-10-27)
+
+- **Ícones do menu todos do mesmo tamanho.** Os paddings por ícone (`icon_pad`) do Home, Albums e Favorites compensavam os desenhos antigos e, com os ícones novos (todos com glifo de 20 px na caixa de 24), deixavam o Home, o disco e o coração menores que a silhueta do Artists. Saíram do `navitems.ts` e dos dois componentes que os liam (a barra de baixo e o menu lateral das telas pequenas). Na barra de baixo (caixa de 21,6 px) os quatro botões ficam com glifo de 18 px; no menu lateral (caixa de 24 px), com 20 px. O Playlists é a mesma coisa (o desenho dele é um pouco menor).
+- Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.11.0 (2026-10-27)
 
 - **Botão direito no card principal da pesquisa ("Top Result").** O clique direito em qualquer ponto do card (capa, título, etiqueta, play, espaço vazio) abre o menu de contexto do app, o do tipo do resultado: música (o mesmo dos três pontinhos), álbum ou artista. Antes só a música tinha menu, e só no botão dos três pontinhos; o clique direito abria o menu do navegador. Vale na página de pesquisa e na aba de pesquisa da barra da direita.
