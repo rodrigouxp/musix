@@ -13,6 +13,16 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.11.0 (2026-10-27)
+
+- **Botão direito no card principal da pesquisa ("Top Result").** O clique direito em qualquer ponto do card (capa, título, etiqueta, play, espaço vazio) abre o menu de contexto do app, o do tipo do resultado: música (o mesmo dos três pontinhos), álbum ou artista. Antes só a música tinha menu, e só no botão dos três pontinhos; o clique direito abria o menu do navegador. Vale na página de pesquisa e na aba de pesquisa da barra da direita.
+- **Ícones com dois estados (`data-state`):** `disc` (antes `ep-and-single`: disco cheio com furo e dois anéis), `favorite` (coração cheio e de contorno; a variante `favorited` saiu do Figma e o arquivo foi apagado) e `user` (silhueta cheia e de contorno), na mesma convenção do `home`. Nova classe `.icon-active` (`Global/basic.scss`) mostra o estado cheio em qualquer lugar: o botão de favoritar, a notificação de favorito e o "Playing from" de favoritos a usam, e o coração agora tem um tamanho só nos dois estados.
+- **Itens Albums, Artists e Favorites do menu como o Home:** de contorno quando inativos e cheios na página aberta, no painel da esquerda, na barra de baixo e no menu lateral das telas pequenas (que agora também troca o ícone da página aberta, inclusive o Home).
+- **Nove ícones reajustados para o vetor de 20 x 20 (Figma):** `add-to-queue`, `attach`, `login`, `logout`, `live-album`, `play-next`, `play-previous`, `play` e `soundtrack`, exportados de novo. Os ícones dos menus de contexto passam a ter todos o mesmo tamanho visual (15 px dos 18 px da caixa). O `chevron-right` não mudou: o Figma exporta o mesmo desenho.
+- **Cores do Figma:** `--color-background` agora é `#0d0d0d` (fundo do painel da esquerda), `--color-neutral-500` é `#606060` (a mistura do fundo da página de playlist fica mais escura) e `--color-neutral-700` (`#323232`) foi criado, ainda sem uso.
+- **Um ícone de busca só:** o `search-on` saiu do Figma por ser idêntico ao `search`; o item "Search on" dos menus da música e do álbum usa o `search.svg`. O README dos ícones tem as notas e a contagem (39 SVGs).
+- Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.10.1 (2026-10-27)
 
 - **Logo do painel da esquerda atualizado (protótipo do Figma).** O cabeçalho agora mostra só a palavra MUSIX (169 x 29 px, `logos/musix.svg`, em `currentColor`) centralizada no bloco de 60 px, no lugar da nota com o texto. Ela mantém a proporção e encolhe sozinha se o painel ficar mais estreito que o do desenho (conferido com `--sidepanel-width` em 160, 200, 224 e 260). A tela de login usa o mesmo logo. A nota (`logos/note.svg`) continua nos outros layouts.
