@@ -13,6 +13,11 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.11.3 (2026-10-27)
+
+- **Controles do player com hover em círculo perfeito.** Cada botão da barra de baixo (shuffle, anterior, play, próximo e repeat) passa de 48 x 40 px (a "pílula") para 28 x 28 px, com o hover redondo igual nos cinco, e o espaço entre eles passa a 12 px. Todos os glifos cabem em 14 x 14 px (o lado maior vale 14): anterior e próximo ficam em 14 x 14, o play em 12,5 x 14 e o shuffle e o repeat, mais largos que altos, em 14 x 11,1 e 14 x 11,9. O pause segue a mesma medida (escala do desenho de 14,82 px para 14 px; conferido só pela conta, porque o app de teste fica carregando e não mostra o pause). Antes os glifos tinham tamanhos diferentes entre si (o anterior e o próximo eram maiores que os outros).
+- Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.11.2 (2026-10-27)
 
 - **Ícones do menu de configurações na mesma proporção.** Os ícones antigos (viewBox de 28 ou 30, com margens próprias) apareciam de 11 a 20 px dentro da mesma caixa de 20 px, enquanto os do Figma ficam com 16,7 px. Albums, Artists e Tracks agora usam os ícones do Figma (`disc`, `user` e `mic`, os mesmos do menu principal, em contorno), e Appearance, Accounts, Folders, Backup e About (que não existem no Figma) ganharam um viewBox só nas configurações (`fitIcon`, em `settings/utils.ts`) que deixa o glifo com a proporção dos do Figma, sem mexer nos arquivos, que outras telas também usam. Hoje a maior medida de todos os ícones do menu é 16,7 px (alguns são mais estreitos pelo próprio desenho, como o microfone).
