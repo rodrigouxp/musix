@@ -13,6 +13,11 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.11.2 (2026-10-27)
+
+- **Ícones do menu de configurações na mesma proporção.** Os ícones antigos (viewBox de 28 ou 30, com margens próprias) apareciam de 11 a 20 px dentro da mesma caixa de 20 px, enquanto os do Figma ficam com 16,7 px. Albums, Artists e Tracks agora usam os ícones do Figma (`disc`, `user` e `mic`, os mesmos do menu principal, em contorno), e Appearance, Accounts, Folders, Backup e About (que não existem no Figma) ganharam um viewBox só nas configurações (`fitIcon`, em `settings/utils.ts`) que deixa o glifo com a proporção dos do Figma, sem mexer nos arquivos, que outras telas também usam. Hoje a maior medida de todos os ícones do menu é 16,7 px (alguns são mais estreitos pelo próprio desenho, como o microfone).
+- Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.11.1 (2026-10-27)
 
 - **Ícones do menu todos do mesmo tamanho.** Os paddings por ícone (`icon_pad`) do Home, Albums e Favorites compensavam os desenhos antigos e, com os ícones novos (todos com glifo de 20 px na caixa de 24), deixavam o Home, o disco e o coração menores que a silhueta do Artists. Saíram do `navitems.ts` e dos dois componentes que os liam (a barra de baixo e o menu lateral das telas pequenas). Na barra de baixo (caixa de 21,6 px) os quatro botões ficam com glifo de 18 px; no menu lateral (caixa de 24 px), com 20 px. O Playlists é a mesma coisa (o desenho dele é um pouco menor).
