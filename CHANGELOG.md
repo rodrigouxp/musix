@@ -13,6 +13,12 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.10.1 (2026-10-27)
+
+- **Logo do painel da esquerda atualizado (protótipo do Figma).** O cabeçalho agora mostra só a palavra MUSIX (169 x 29 px, `logos/musix.svg`, em `currentColor`) centralizada no bloco de 60 px, no lugar da nota com o texto. Ela mantém a proporção e encolhe sozinha se o painel ficar mais estreito que o do desenho (conferido com `--sidepanel-width` em 160, 200, 224 e 260). A tela de login usa o mesmo logo. A nota (`logos/note.svg`) continua nos outros layouts.
+- **Cores do painel atualizadas.** O fundo do painel passou de preto para `#151515` (novo token `--color-background`, o estilo "background" do Figma) e o cabeçalho para `#0a0a0a` (`--sidepanel-header-bg`), sem borda e sem gradiente. O token `--sidepanel-header-border` (`#303030`), que nunca foi usado, saiu porque o cabeçalho do protótipo não tem contorno; saíram também `--sidepanel-header-gap` e `--sidepanel-title-weight`, que só serviam ao texto "MUSIX" que deixou de existir.
+- Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.10.0 (2026-10-27)
 
 - **Painel da esquerda redesenhado (SidePanel do Figma).** Medidas do protótipo, todas em tokens `--sidepanel-*` (`_musix-tokens.scss`): painel de 224 px mais a borda de 1 px que o app mantém (o painel principal ganha 15 px: 1200 para 1215 a 1440 px), padding e espaços de 12, cabeçalho de 60 px com padding 10 12 10 18 e cantos 13, itens de 34 px com ícone de 20 px e 12 de espaço, 10 entre os botões, divisor de 1 px (`--color-divider`) com 12 acima e abaixo e cartão da música quadrado com cantos 10. Nada tem largura fixa: tudo ocupa a largura do painel menos o padding (conferido trocando `--sidepanel-width` para 200 e 260). O cabeçalho continua com o gradiente, a borda e a nota de hoje; o fundo cinza do item ativo também.
