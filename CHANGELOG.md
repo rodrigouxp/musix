@@ -13,6 +13,14 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.12.1 (2026-11-01)
+
+- **Hover da barra do player igual em todos os botões.** Favorite, add, lyrics e speaker passam a ter o mesmo círculo de hover de 34 px dos cinco botões do centro (antes 28 px). Os ícones continuam no mesmo lugar (20 px, com as mesmas distâncias do Figma): só o círculo cresceu, em volta do ícone.
+- **Hover padrão do app em `neutral/900` (`#222222`).** O hover de todo `button` era azul (`$darkestblue`): os botões de editar o nome e a foto do artista, do álbum e da playlist, os botões do menu de foto e os demais. Agora usam o token novo `--hover-bg` (`neutral/900`), o mesmo círculo dos botões do centro da barra.
+- **Menu de contexto:** o hover do item deixa de ser azul. Como o fundo do menu já é `neutral/900`, o hover usa `neutral/700` (`#323232`, token novo `--menu-item-bg-hover`; decisão do Rodrigo), para continuar visível.
+- Não mudaram: os estados "ativo" em azul (`.btn-active`, a linha tocando na fila, a opção ativa dos seletores e o cartão do resultado da busca com o menu aberto).
+- Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.12.0 (2026-10-27)
 
 - **Barra do player (acima de 900 px) igual ao PlayerBar do Figma** (nó `12355:646`). A barra de baixo ganha o fundo `background` (`#0d0d0d`) e a borda de cima de 2 px em `neutral/900`, com 80 px de altura útil e padding de 12 e 20 px. Os tokens vivem no bloco novo `--playerbar-*` de `_musix-tokens.scss`; nenhuma cor do Figma mudou (os 23 estilos já eram iguais).
