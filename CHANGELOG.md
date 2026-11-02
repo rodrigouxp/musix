@@ -13,6 +13,14 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.13.0 (2026-11-02)
+
+- **"Mark as Compilation" no menu do álbum.** Marca o álbum como coletânea para ele entrar na seção Compilations da página do artista (em Albums), como já era com "Mark as EPs & Singles", "Soundtrack" e "Live album". O servidor aceita `compilation` em `POST /album/<hash>/type` (a marca fica no banco e vale depois de reiniciar). Para um álbum que o servidor já toma por coletânea sozinho (Various Artists, "Greatest Hits"...), "Remove from Compilations" grava a marca `album` ("álbum comum"), que vence a detecção pelo título. Sem marca, tudo funciona como antes.
+- **Menu da música sem "Go to Folder"** (o "Open in files" continua).
+- **Menu de contexto como no Figma:** ícones em 20 px (antes 18), divisor em `neutral/700` (antes branco a 15%) e o ícone novo `files` no "Open in files" (o arquivo `menu/go-to-folder.svg` foi apagado). `compilation` e `files` são as duas variantes novas do Icon (43 SVGs); os 23 estilos de cor continuam iguais aos tokens e os outros ícones não mudaram.
+- **Página do álbum (e do artista e da playlist):** o botão de três pontinhos com o menu aberto usa a cor do hover (`neutral/900`, antes azul); o botão de favorito não tem mais o preenchimento de fundo e o hover é o padrão; o botão Play é sempre branco (texto em `background`), qualquer que seja a cor do álbum.
+- **PlayerBar:** 32 px entre a música, o favorite e o add (antes 40).
+
 ## 3.12.1 (2026-11-01)
 
 - **Hover da barra do player igual em todos os botões.** Favorite, add, lyrics e speaker passam a ter o mesmo círculo de hover de 34 px dos cinco botões do centro (antes 28 px). Os ícones continuam no mesmo lugar (20 px, com as mesmas distâncias do Figma): só o círculo cresceu, em volta do ícone.

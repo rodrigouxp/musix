@@ -132,6 +132,46 @@ def test_mark_replace_and_remove_persist_after_reload(http, monkeypatch):
     assert AlbumTypeStore.get(album.albumhash) is None
 
 
+def test_compilation_mark_persists_after_reload(http, monkeypatch):
+    album = make_album("A Mixed Bag", "2a" * 8)
+    put_albums_in_store(monkeypatch, [album])
+
+    res = http.post(f"/album/{album.albumhash}/type", json={"kind": "compilation"})
+    assert res.status_code == 200
+    assert res.get_json() == {"ok": True, "kind": "compilation"}
+    assert album.type == "compilation"
+
+    AlbumTypeStore.overrides = {}
+    AlbumTypeStore.load(AlbumTypeTable.get_all())
+    album.check_type()
+    assert album.type == "compilation"
+
+    res = http.post(f"/album/{album.albumhash}/type", json={"kind": None})
+    assert res.get_json() == {"ok": True, "kind": None}
+    assert album.type == "album"
+
+
+def test_regular_album_mark_beats_the_compilation_check(http, monkeypatch):
+    album = make_album("Greatest Hits", "3a" * 8)
+    put_albums_in_store(monkeypatch, [album])
+    album.check_type()
+    assert album.type == "compilation"
+
+    res = http.post(f"/album/{album.albumhash}/type", json={"kind": "album"})
+    assert res.status_code == 200
+    assert res.get_json() == {"ok": True, "kind": "album"}
+    assert album.type == "album"
+
+    AlbumTypeStore.overrides = {}
+    AlbumTypeStore.load(AlbumTypeTable.get_all())
+    album.check_type()
+    assert album.type == "album"
+
+    # without the mark the album is a compilation again
+    http.post(f"/album/{album.albumhash}/type", json={"kind": None})
+    assert album.type == "compilation"
+
+
 def test_type_of_unknown_album_is_404(http, monkeypatch):
     put_albums_in_store(monkeypatch, [])
 
@@ -167,7 +207,10 @@ def test_artist_lists_hold_only_marked_albums(http, monkeypatch):
     live = make_album("Reunion", "c" * 16)
     comp = make_album("Greatest Hits", "d" * 16)
     unmarked_ep_title = make_album("Looks Like An EP", "e" * 16)
-    albums = [plain, ep, soundtrack, live, comp, unmarked_ep_title]
+    marked_comp = make_album("A Mixed Bag", "ab" * 8)
+    # looks like a compilation by its title, but the user says it is a regular album
+    regular = make_album("Best Of Nothing", "cd" * 8)
+    albums = [plain, ep, soundtrack, live, comp, unmarked_ep_title, marked_comp, regular]
 
     # the track list is deliberately unordered: the tracks of one album are not
     # next to each other (this is what used to break the grouping)
@@ -197,7 +240,13 @@ def test_artist_lists_hold_only_marked_albums(http, monkeypatch):
         TrackStore, "get_tracks_by_trackhashes", classmethod(lambda cls, h: tracks)
     )
 
-    for album, kind in ((ep, "ep"), (soundtrack, "soundtrack"), (live, "live album")):
+    for album, kind in (
+        (ep, "ep"),
+        (soundtrack, "soundtrack"),
+        (live, "live album"),
+        (marked_comp, "compilation"),
+        (regular, "album"),
+    ):
         AlbumTypeStore.set(album.albumhash, kind)
 
     res = http.get(f"/artist/{ARTISTHASH}/albums")
@@ -210,8 +259,8 @@ def test_artist_lists_hold_only_marked_albums(http, monkeypatch):
     assert hashes("singles_and_eps") == {ep.albumhash}
     assert hashes("soundtracks") == {soundtrack.albumhash}
     assert hashes("live_albums") == {live.albumhash}
-    assert hashes("compilations") == {comp.albumhash}
-    assert hashes("albums") == {plain.albumhash, unmarked_ep_title.albumhash}
+    assert hashes("compilations") == {comp.albumhash, marked_comp.albumhash}
+    assert hashes("albums") == {plain.albumhash, unmarked_ep_title.albumhash, regular.albumhash}
     assert all(a["album_type"] == "ep" for a in data["singles_and_eps"])
 
 

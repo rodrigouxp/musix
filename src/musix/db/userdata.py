@@ -178,7 +178,8 @@ class SimilarArtistTable(Base):
 
 class AlbumTypeTable(Base):
     """
-    Album types set by hand ("ep", "soundtrack" or "live album"), one per album.
+    Album types set by hand ("ep", "soundtrack", "live album", "compilation" or "album"),
+    one per album.
     """
 
     __tablename__ = "album_type_override"

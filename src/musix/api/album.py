@@ -28,7 +28,7 @@ from musix.lib.tagwriter import TagChanges, TagWriteError, write_tags
 from musix.models.album import Album
 from musix.settings import Paths
 from musix.store.albums import AlbumStore
-from musix.store.albumtypes import ALBUM_KINDS, AlbumTypeStore
+from musix.store.albumtypes import ALBUM_MARKS, AlbumTypeStore
 from musix.store.artists import ArtistStore
 from musix.store.tracks import TrackStore
 from musix.utils.hashing import create_hash
@@ -167,7 +167,7 @@ def refresh_album_cover(path: AlbumHashSchema):
 class AlbumTypeBody(BaseModel):
     kind: str | None = Field(
         None,
-        description='"ep", "soundtrack", "live album" or null to remove the mark',
+        description='"ep", "soundtrack", "live album", "compilation", "album" (a regular album) or null to remove the mark',
         json_schema_extra={"example": "ep"},
     )
 
@@ -179,8 +179,9 @@ def set_album_type(path: AlbumHashSchema, body: AlbumTypeBody):
     Mark the type of an album
 
     An album only counts as an EP, a soundtrack or a live album when it is marked
-    by hand. One mark per album: marking again replaces the old mark and
-    ``null`` removes it.
+    by hand. A compilation is found by the title or the artist, or marked by hand;
+    ``"album"`` says it is a regular album even if it looks like a compilation.
+    One mark per album: marking again replaces the old mark and ``null`` removes it.
     """
     entry = AlbumStore.albummap.get(path.albumhash)
 
@@ -189,8 +190,8 @@ def set_album_type(path: AlbumHashSchema, body: AlbumTypeBody):
 
     kind = body.kind
 
-    if kind is not None and kind not in ALBUM_KINDS:
-        return {"error": f"kind must be one of {', '.join(ALBUM_KINDS)} or null"}, 400
+    if kind is not None and kind not in ALBUM_MARKS:
+        return {"error": f"kind must be one of {', '.join(ALBUM_MARKS)} or null"}, 400
 
     AlbumTypeTable.set_kind(path.albumhash, kind)
     AlbumTypeStore.set(path.albumhash, kind)
