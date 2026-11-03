@@ -13,6 +13,11 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.13.1 (2026-11-03)
+
+- **PlayerBar:** 24 px entre o botão de lyrics e o do volume (antes 40, o valor do Figma). É a distância entre as caixas dos dois botões (28 px); entre os ícones ficam 32 px, e os círculos de hover de 34 px não se tocam.
+- Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.13.0 (2026-11-02)
 
 - **"Mark as Compilation" no menu do álbum.** Marca o álbum como coletânea para ele entrar na seção Compilations da página do artista (em Albums), como já era com "Mark as EPs & Singles", "Soundtrack" e "Live album". O servidor aceita `compilation` em `POST /album/<hash>/type` (a marca fica no banco e vale depois de reiniciar). Para um álbum que o servidor já toma por coletânea sozinho (Various Artists, "Greatest Hits"...), "Remove from Compilations" grava a marca `album` ("álbum comum"), que vence a detecção pelo título. Sem marca, tudo funciona como antes.
