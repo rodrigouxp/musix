@@ -13,6 +13,11 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.14.0 (2026-11-03)
+
+- **Fonte do app inteiro: Satoshi Variable** (pesos 300 a 900, um arquivo só, `Satoshi-Variable.ttf`, 127 KB, dentro do próprio cliente, sem CDN). Vale para o texto do app, os botões, os campos, o painel da esquerda e a PlayerBar. Antes: SF Compact Display no app e Roboto no painel e na PlayerBar. Os arquivos do SF Compact Display e o `import` da Roboto saíram do cliente (o pacote da Roboto continua no `package.json`, sem uso; o SF Mono dos campos de código e das chaves continua). O `:root` tem um token só, `--font-sans`, no lugar do `--font-roboto`. Os caracteres que a Satoshi não tem (japonês, coreano, emoji) caem na fonte do sistema.
+- Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.13.1 (2026-11-03)
 
 - **PlayerBar:** 24 px entre o botão de lyrics e o do volume (antes 40, o valor do Figma). É a distância entre as caixas dos dois botões (28 px); entre os ícones ficam 32 px, e os círculos de hover de 34 px não se tocam.
