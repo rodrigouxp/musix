@@ -13,6 +13,14 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.15.0 (2026-11-07)
+
+- **Redesign da Home, etapa 0: tokens do Figma.** Os cinco cinzas mudaram de valor no Figma e o app segue pelo nome do token: `neutral-300` `#b8b8b8` para `#707070`, `neutral-500` `#606060` para `#333333`, `neutral-700` `#323232` para `#222222`, `neutral-900` `#222222` para `#111111`. Nova cor `--color-dynamic-playbar` (`#1f1e1f`, ainda sem uso). O hover padrão (`--hover-bg`) passa a `neutral-700`, então continua `#222222`.
+- **O que muda na tela:** o fundo do menu de contexto e do menu do usuário passa a `#111111`, o divisor e o hover do item a `#222222`, os ícones do menu a branco (como no Figma) e a seta do submenu a `#707070` (token novo `--menu-item-arrow`); a borda de cima da barra do player passa a `#111111` e o nome do artista nela a `#333333` (contraste baixo, fica assim até a PlayerBar nova); a trilha e as pílulas dos tempos seguem `#222222` (agora por `neutral-700`) e o trecho carregado `#333333`.
+- **Sem desenho no Figma:** o fundo da página de playlist (mistura a 15%) e o fundo padrão do cabeçalho da playlist mantêm os valores antigos pelos tokens `--color-legacy-neutral-500` (`#606060`) e `--color-legacy-neutral-900` (`#222222`), até o Rodrigo decidir.
+- **Tokens de texto:** os nove estilos de texto do Figma (screen-title-48px, section-title-28px, panel-title-20px, action-button-14px, album-title-24px, track-title-18px e paragraph-18px, -14px e -12px) viram tokens `--text-<nome>-size`, `-weight` e `-line-height` (a altura automática do Figma é `normal`) e o mixin `@include text('<nome>')`. Ainda ninguém usa: os painéis novos da Home aplicam nas próximas etapas.
+- Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.14.0 (2026-11-03)
 
 - **Fonte do app inteiro: Satoshi Variable** (pesos 300 a 900, um arquivo só, `Satoshi-Variable.ttf`, 127 KB, dentro do próprio cliente, sem CDN). Vale para o texto do app, os botões, os campos, o painel da esquerda e a PlayerBar. Antes: SF Compact Display no app e Roboto no painel e na PlayerBar. Os arquivos do SF Compact Display e o `import` da Roboto saíram do cliente (o pacote da Roboto continua no `package.json`, sem uso; o SF Mono dos campos de código e das chaves continua). O `:root` tem um token só, `--font-sans`, no lugar do `--font-roboto`. Os caracteres que a Satoshi não tem (japonês, coreano, emoji) caem na fonte do sistema.
