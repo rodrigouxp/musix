@@ -13,6 +13,18 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.21.1 (2026-11-07)
+
+- **Correções do redesign da Home (desktop, layout padrão).**
+  - **A música que toca nunca sai da fila:** "Clear queue" do QueuePanel apaga tudo menos a faixa que toca (a música continua e a PlayerBar não fica vazia); o `delete` de um grupo também deixa a faixa que toca.
+  - **SidePanel sem a capa do álbum** (o cartão da música embaixo das playlists) e **a página Now Playing sai do desktop**: o endereço volta para a Home. A letra (lyrics, que é uma aba dela) continua funcionando. Telas de até 900 px e layout alternativo não mudam.
+  - **A capa do QueuePanel leva à página do álbum** (a que está tocando).
+  - **O disco e a capa do QueuePanel têm 8 px de cada lado** (antes 4 à direita: o painel guarda 4 para a barra de rolagem da lista, e a miniatura devolve).
+  - **Cabeçalho do grupo com 4 px de padding em cima** (o nó `12408:1963` do Figma), para não ficar colado na faixa de cima.
+  - **A barra de rolagem das páginas** começa a 4 px da borda de cima do painel e termina a 4 px da borda de baixo.
+  - **O chevron do hover na miniatura da PlayerBar** passa a aparecer por cima da capa.
+- Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.21.0 (2026-11-07)
 
 - **Redesign da Home, etapa 6: os botões da fila (QueuePanel, desktop, layout padrão).** Os botões do cabeçalho de cada grupo (álbum ou playlist) agora funcionam e afetam **só as faixas daquele grupo**: `shuffle` embaralha a ordem dentro do grupo, uma vez, sem parar a música (a faixa que toca continua tocando); `repeat` liga e desliga a repetição do grupo (quando a última faixa do grupo termina, volta para a primeira dele); `delete` tira todas as faixas do grupo (se a que toca é dele, passa para a seguinte, como a remoção de uma faixa); `drag` arrasta o grupo inteiro, com o cabeçalho, para outra posição da fila. Na linha de cada faixa o `repeat` repete aquela faixa. Os de liga e desliga ficam em `neutral-100` quando ligados (o Figma não tem o estado ligado; é a cor do hover), com `aria-pressed` e `aria-label`, e todos são alcançáveis pelo Tab.
