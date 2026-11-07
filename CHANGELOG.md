@@ -13,6 +13,13 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.17.0 (2026-11-07)
+
+- **Redesign da Home, etapa 2: a TopBar (desktop, acima de 900 px, layout padrão).** Voltar e avançar viram dois círculos de 36 px com borda de 1 px `neutral-700`, 16 px entre eles e sem a linha separadora, com o ícone `chevron` do Figma (o de voltar é o mesmo girado 180°; o arquivo `chevron-right.svg` virou `chevron.svg`). A busca passa a 380 x 48 px, redonda, com fundo `neutral-700` a 50%, borda de 1 px, lupa de 20 px em `neutral-500`, 24 px até o texto e placeholder "Start typing to search..." no estilo `paragraph-18px` (o texto digitado é `neutral-100`, o Figma não mostra). O avatar tem 36 px na ponta direita. 64 px entre os botões e a busca. Nas larguras pequenas a busca encolhe até 14rem e os espaços caem para 24 px. Tokens `--topbar-*`.
+- **O título da página fica:** o Figma não tem o título, mas ele não foi apagado: o caminho da pasta (com o menu de ordenação) e os títulos de Configurações, Playlists, Faixas do artista e Now Playing continuam entre a busca e o avatar e cedem espaço primeiro.
+- Não mudam: o layout alternativo, as telas de até 900 px e a busca da barra lateral direita.
+- Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.16.0 (2026-11-07)
 
 - **Redesign da Home, etapa 1: a grade em painéis e o SidePanel (desktop, acima de 900 px, layout padrão).** O app vira um conjunto de blocos soltos sobre o fundo `background`, com 8 px em volta de tudo e 8 px entre os painéis, cantos de 8: SidePanel (224), TopBar (64), conteúdo da página (o FeedPanel, ocupa o resto) e PlayerBar (80) embaixo, na largura toda. As bordas laterais do app e a borda de cima da barra de baixo saem; a TopBar, o conteúdo e a barra lateral direita têm borda de 1 px `neutral-700` por dentro. Vale para todas as páginas (a moldura é a mesma em toda página). Tokens novos `--layout-panel-gap`, `--layout-panel-radius`, `--layout-panel-border` e `--topbar-height`. A barra de rolagem das páginas fica fina (4 px, redonda, `neutral-700`, sem trilho). Telas de até 900 px e o layout alternativo não mudam.
