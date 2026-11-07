@@ -13,6 +13,14 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.16.0 (2026-11-07)
+
+- **Redesign da Home, etapa 1: a grade em painéis e o SidePanel (desktop, acima de 900 px, layout padrão).** O app vira um conjunto de blocos soltos sobre o fundo `background`, com 8 px em volta de tudo e 8 px entre os painéis, cantos de 8: SidePanel (224), TopBar (64), conteúdo da página (o FeedPanel, ocupa o resto) e PlayerBar (80) embaixo, na largura toda. As bordas laterais do app e a borda de cima da barra de baixo saem; a TopBar, o conteúdo e a barra lateral direita têm borda de 1 px `neutral-700` por dentro. Vale para todas as páginas (a moldura é a mesma em toda página). Tokens novos `--layout-panel-gap`, `--layout-panel-radius`, `--layout-panel-border` e `--topbar-height`. A barra de rolagem das páginas fica fina (4 px, redonda, `neutral-700`, sem trilho). Telas de até 900 px e o layout alternativo não mudam.
+- **SidePanel como no Figma:** fundo `neutral-900`, cantos de 8, sem a borda direita, padding 8, cabeçalho de 60 sem fundo (a logo é a mesma do Figma), divisor `neutral-700`; os itens usam o estilo de texto `action-button-14px` (Bold 14, antes peso 600), a pílula do item ativo é `neutral-700` e o coração de Favorites é sempre cheio e vermelho (`error/300`), mesmo com outra página ativa. Os textos do painel passam a usar o token de texto, sem tamanho nem peso soltos. O cartão da música do pé do painel (opção "use_np_img") não está no Figma e ficou como estava.
+- **PlayerBar:** sem a borda de cima, cantos de 8 e fundo `neutral-900` (a PlayerBar nova inteira vem na etapa 4).
+- **Menu de contexto:** a seta do submenu passa a 14 x 14 px e `neutral-100`, como o Rodrigo atualizou no Figma (o ícone `chevron`).
+- Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.15.0 (2026-11-07)
 
 - **Redesign da Home, etapa 0: tokens do Figma.** Os cinco cinzas mudaram de valor no Figma e o app segue pelo nome do token: `neutral-300` `#b8b8b8` para `#707070`, `neutral-500` `#606060` para `#333333`, `neutral-700` `#323232` para `#222222`, `neutral-900` `#222222` para `#111111`. Nova cor `--color-dynamic-playbar` (`#1f1e1f`, ainda sem uso). O hover padrão (`--hover-bg`) passa a `neutral-700`, então continua `#222222`.
