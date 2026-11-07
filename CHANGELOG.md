@@ -13,6 +13,13 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.21.0 (2026-11-07)
+
+- **Redesign da Home, etapa 6: os botões da fila (QueuePanel, desktop, layout padrão).** Os botões do cabeçalho de cada grupo (álbum ou playlist) agora funcionam e afetam **só as faixas daquele grupo**: `shuffle` embaralha a ordem dentro do grupo, uma vez, sem parar a música (a faixa que toca continua tocando); `repeat` liga e desliga a repetição do grupo (quando a última faixa do grupo termina, volta para a primeira dele); `delete` tira todas as faixas do grupo (se a que toca é dele, passa para a seguinte, como a remoção de uma faixa); `drag` arrasta o grupo inteiro, com o cabeçalho, para outra posição da fila. Na linha de cada faixa o `repeat` repete aquela faixa. Os de liga e desliga ficam em `neutral-100` quando ligados (o Figma não tem o estado ligado; é a cor do hover), com `aria-pressed` e `aria-label`, e todos são alcançáveis pelo Tab.
+- **Prioridade das repetições:** repetir a faixa vale mais que repetir o grupo, que vale mais que o `repeat` geral da PlayerBar (todos, uma, nenhum). A faixa que repete volta para si mesma; no fim do grupo que repete a fila volta ao começo do grupo; nas demais, vale o repeat da PlayerBar. O `shuffle` e o `repeat` da PlayerBar continuam para a fila toda. A repetição vale mesmo com o repeat geral desligado (a fila não para no fim do grupo ou da faixa). O estado da repetição é salvo com a fila.
+- **Arrastar uma faixa de um grupo:** ela pode mudar de lugar dentro do grupo; arrastada para fora vira faixa solta; solta entre duas faixas de um grupo, entra nele (decisão minha: se preferir travar dentro do grupo, é só pedir).
+- Não mudam: o layout alternativo e as telas de até 900 px. O servidor só sobe a versão.
+
 ## 3.20.0 (2026-11-07)
 
 - **Redesign da Home, etapa 5: o QueuePanel (desktop, acima de 900 px, layout padrão).** A fila vira um painel de 280 px à direita, entre a TopBar e a PlayerBar (a TopBar passa a ocupar a largura toda), com borda de 1 px `neutral-700` e cantos de 8. Abre e fecha pela miniatura da PlayerBar com uma animação de largura de 300 ms (`ease-in-out`) e o estado fica salvo. Ele **substitui a barra lateral direita antiga** nesse layout: a opção "Use sidebar" não tem mais efeito no desktop de layout padrão (continua valendo no layout alternativo e nas telas de até 900 px, onde a barra já não aparecia).
