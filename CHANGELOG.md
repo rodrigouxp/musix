@@ -13,6 +13,13 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.21.4 (2026-11-07)
+
+- **Play e pause da PlayerBar com 40 x 40 px** (eram 48). O ícone e o spinner acompanham a escala. Só o play tem `padding-left` de 4 px (o triângulo fica mais centrado); o pause não tem padding.
+- **TopBar com 52 px de altura** (era 64). **A busca não tem mais fundo nem traço**: ficam a lupa e o texto, e ela cresce até 12 px do botão do perfil. Em páginas com título na barra (pasta) o título continua entre a busca e o perfil, com o espaço de antes.
+- **O play que aparece sobre a miniatura na Home (álbuns e artistas) agora é um círculo de 40 x 40 px** (raio de 400 px). Antes ficava oval: o `height` global do botão anulava a proporção. A cor azul não mudou.
+- Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.21.3 (2026-11-07)
 
 - **Cores do play e do pause da PlayerBar** (nó `12385:255` do Figma): o play tem fundo `neutral-700`, ícone `neutral-100` e hover `neutral-500`; o pause tem fundo `neutral-500`, ícone `neutral-100` e hover `neutral-700`. A troca entre os dois segue com a transição de 400 ms.
