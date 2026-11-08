@@ -13,6 +13,14 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.21.2 (2026-11-07)
+
+- **PlayerBar nova também no tablet.**
+  - **De 661 a 900 px** (qualquer layout) a PlayerBar do Figma substitui a barra antiga, em duas linhas: os controles com a linha do tempo em cima; embaixo, as ações (volume, letra, favorito e add) à esquerda e a música com a capa à direita. Os botões de navegação continuam embaixo dela. Até 660 px (celular) a barra continua a de antes, e o layout alternativo acima de 900 px também.
+  - **O chevron** sobre a capa da PlayerBar (abre e fecha a fila) fica com 25% de opacidade, como no Figma.
+  - **Gaps:** FeedPanel de 32 para 40 px (entre o título e as linhas); QueuePanel de 12 para 20 px (entre o título, a lista e a miniatura).
+- Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.21.1 (2026-11-07)
 
 - **Correções do redesign da Home (desktop, layout padrão).**
