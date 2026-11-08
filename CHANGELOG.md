@@ -13,6 +13,11 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.21.3 (2026-11-07)
+
+- **Cores do play e do pause da PlayerBar** (nó `12385:255` do Figma): o play tem fundo `neutral-700`, ícone `neutral-100` e hover `neutral-500`; o pause tem fundo `neutral-500`, ícone `neutral-100` e hover `neutral-700`. A troca entre os dois segue com a transição de 400 ms.
+- Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.21.2 (2026-11-07)
 
 - **PlayerBar nova também no tablet.**
