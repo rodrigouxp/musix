@@ -13,6 +13,15 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.22.0 (2026-11-07)
+
+- **Painéis laterais com 25% da largura da janela** (o painel da esquerda era 224 px e a Queue 280 px). O que há dentro escala com o painel e os paddings e gaps continuam em px.
+  - **Queue:** a capa é um quadrado da largura do painel e o disco aparece acima dela por 55/264 da largura (os números do Figma a 280 px), então o conjunto escala inteiro: o disco girando fica proporcional em qualquer largura.
+  - **A grade em painéis agora vale a partir de 601 px** (antes de 901 px): no que era o tablet (601 a 900 px) a Home tem o painel da esquerda, a TopBar, o conteúdo e a Queue. A PlayerBar fica em duas linhas até 900 px (as ações e a música na segunda) e em uma linha acima disso; a barra de navegação do tablet some. Até 600 px (celular) nada muda.
+  - **Layout alternativo:** de 601 a 900 px ele mostra o layout padrão (a barra de links não cabe); acima de 900 px continua como era.
+  - A coluna da Queue só anima ao abrir e fechar o painel (com a largura em `vw`, redimensionar a janela disparava a transição e as colunas ficavam atrasadas).
+- Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.21.4 (2026-11-07)
 
 - **Play e pause da PlayerBar com 40 x 40 px** (eram 48). O ícone e o spinner acompanham a escala. Só o play tem `padding-left` de 4 px (o triângulo fica mais centrado); o pause não tem padding.
