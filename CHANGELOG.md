@@ -13,6 +13,11 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.22.1 (2026-11-07)
+
+- **Largura máxima dos painéis laterais:** 224 px o painel da esquerda e 280 px a Queue (os tamanhos do Figma). Abaixo disso continuam com 25% da largura da janela; a 1400 px ou mais ficam nos tamanhos de antes.
+- Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.22.0 (2026-11-07)
 
 - **Painéis laterais com 25% da largura da janela** (o painel da esquerda era 224 px e a Queue 280 px). O que há dentro escala com o painel e os paddings e gaps continuam em px.
