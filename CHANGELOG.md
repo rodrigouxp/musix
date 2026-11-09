@@ -13,6 +13,16 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.26.0 (2026-11-09)
+
+- **Nova página do artista, etapa D: hero com imagem, thumbnail com ponto de foco e o menu do artista novo.**
+  - **Hero (servidor e cliente):** o artista passa a ter, além da foto redonda (thumbnail), uma imagem larga escolhida à mão. Nada é baixado sozinho. O servidor guarda a imagem **sem cortar** (no máximo 2560 px de largura, mais uma versão de 1280 px para telas estreitas) numa pasta própria (`images/artists/hero`) e o **ponto de foco** (x e y, em %) num arquivo JSON com o nome do artista, ao lado da imagem; a "marca de que existe hero" é a própria imagem. Rotas novas, só para admin: `POST /artist/<hash>/hero` (envia a imagem e o foco), `POST /artist/<hash>/hero/position` (só o foco) e `DELETE /artist/<hash>/hero`; as imagens saem em `/img/artist/hero/<arquivo>` e `/img/artist/hero/small/<arquivo>`. `GET /artist/<hash>` traz o `hero` (arquivo, foco e uma versão para furar o cache) ou `null`. O hero da página usa `object-fit: cover` com esse foco: nunca estica nem deforma e o mesmo pedaço fica à vista em qualquer largura. Sem hero, o quadriculado de antes.
+  - **Reposicionar:** o botão **Reposition** (transparente, borda de 1 px e texto brancos, raio 8) aparece no hover do hero, só para admin e só quando há hero. Arrastar a imagem (mouse ou dedo) move o foco, com o enquadramento real à mostra; **Save**, **Cancel** e, com um hero já salvo, **Remove**. Uma linha explica que o enquadramento se adapta a outras larguras.
+  - **Thumbnail:** o envio da foto redonda aceita o ponto de foco (`x` e `y`, opcionais; sem eles, o centro como antes) e o quadrado é cortado em volta dele. No cliente, **Update artist's thumbnail** abre uma janela com a foto, o quadrado para arrastar (com o círculo que vira a foto redonda), Save, a escolha de outro arquivo e o **Refetch photo** que já existia. A imagem nova aparece na hora.
+  - **Menu do artista**, em todo lugar onde ele abre (cartões, busca, página, hero): Play next, Add to queue, Add to Playlist, Add to Collection; separador; Update artist's thumbnail e Update artist's hero (só admin; o do hero só no layout em painéis, e de fora da página do artista leva até ela); separador; Open in files (a pasta em comum das faixas do artista; se for a raiz da biblioteca, a pasta do primeiro álbum, com aviso); separador; Rename (só admin, a janela que já existia); separador; Search on. O "Search on" do artista passa a buscar o nome do artista do menu, não o da página aberta.
+  - Testes do servidor: `tests/test_artist_hero.py` (novo) e o foco da thumbnail em `tests/test_artist_image.py`.
+- Servidor **e** cliente mudaram: depois de atualizar, o hero e o foco só passam a existir quando o admin enviar a primeira imagem.
+
 ## 3.25.0 (2026-11-09)
 
 - **Nova página do artista, etapa C: abas de lançamentos e cartão de álbum com duas variantes.**
