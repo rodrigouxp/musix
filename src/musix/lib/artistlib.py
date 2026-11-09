@@ -1,3 +1,4 @@
+import json
 import os
 import random
 import time
@@ -119,6 +120,99 @@ def set_manual_artist_image(artisthash: str, manual: bool):
         marker.touch()
     else:
         marker.unlink(missing_ok=True)
+
+
+def crop_square(img: Image.Image, x: float = 50, y: float = 50) -> Image.Image:
+    """
+    Cuts the biggest square of the image around the point (x, y), both in percent of the
+    width and the height. The square is kept inside the image, so a point near an edge
+    gives the square that touches that edge. (50, 50) is the centre.
+    """
+    side = min(img.width, img.height)
+    left = round(min(max(img.width * x / 100 - side / 2, 0), img.width - side))
+    top = round(min(max(img.height * y / 100 - side / 2, 0), img.height - side))
+
+    return img.crop((left, top, left + side, top + side))
+
+
+# THE HERO of the artist page. The image is saved in two sizes without cropping (the browser
+# cuts it with `object-fit: cover`) and the focus point is saved next to it, in a small json
+# file named after the artist: both are only written by hand, nothing is downloaded.
+def hero_image_path(artisthash: str, small: bool = False) -> Path:
+    paths = settings.Paths()
+    folder = paths.sm_artist_hero_img_path if small else paths.artist_hero_img_path
+
+    return folder / f"{artisthash}.webp"
+
+
+def hero_meta_path(artisthash: str) -> Path:
+    return settings.Paths().artist_hero_img_path / f"{artisthash}.json"
+
+
+def get_artist_hero(artisthash: str) -> dict | None:
+    """
+    The hero of an artist: the image file, the focus point (x and y in percent) and a
+    version that changes when the image or the point changes (the browser uses it to
+    load the new one). ``None`` when the artist has no hero.
+    """
+    if not hero_image_path(artisthash).exists():
+        return None
+
+    meta: dict[str, Any] = {}
+
+    try:
+        meta = json.loads(hero_meta_path(artisthash).read_text())
+    except (OSError, ValueError):
+        pass
+
+    return {
+        "image": f"{artisthash}.webp",
+        "x": meta.get("x", 50),
+        "y": meta.get("y", 50),
+        "version": meta.get("version", 0),
+    }
+
+
+def set_hero_focus(artisthash: str, x: float, y: float):
+    path = hero_meta_path(artisthash)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps({"x": x, "y": y, "version": time.time_ns() // 1_000_000})
+    )
+
+
+def save_artist_hero(img: Image.Image, artisthash: str, x: float = 50, y: float = 50):
+    """
+    Saves the hero (the big and the small one, same proportion as the image, never wider
+    than it is) and the focus point.
+    """
+    for small, width in (
+        (False, settings.Defaults.LG_ARTIST_HERO_WIDTH),
+        (True, settings.Defaults.SM_ARTIST_HERO_WIDTH),
+    ):
+        path = hero_image_path(artisthash, small)
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+        if img.width > width:
+            resized = img.resize(
+                (width, round(img.height * width / img.width)),
+                Image.Resampling.LANCZOS,
+            )
+        else:
+            resized = img
+
+        resized.save(path, format="webp", quality=90)
+
+    set_hero_focus(artisthash, x, y)
+
+
+def remove_artist_hero(artisthash: str):
+    for path in (
+        hero_image_path(artisthash),
+        hero_image_path(artisthash, True),
+        hero_meta_path(artisthash),
+    ):
+        path.unlink(missing_ok=True)
 
 
 def update_artist_color(artisthash: str):

@@ -26,7 +26,12 @@ from musix.db.userdata import SimilarArtistTable
 from musix.lib.artistlib import (
     DownloadImage,
     artist_image_entries,
+    crop_square,
+    get_artist_hero,
     get_artist_image_link,
+    remove_artist_hero,
+    save_artist_hero,
+    set_hero_focus,
     set_manual_artist_image,
     update_artist_color,
 )
@@ -120,6 +125,8 @@ def get_artist(path: ArtistHashSchema, query: GetArtistQuery):
             "albumcount": artist.albumcount,
             "genres": genres,
             "is_favorite": artist.is_favorite,
+            # the wide image of the page (or None: the page shows a checkerboard)
+            "hero": get_artist_hero(artisthash),
         },
         "tracks": tracks,
         "albums": albums,
@@ -251,8 +258,8 @@ ARTIST_IMAGE_FORMATS = {"JPEG", "PNG", "WEBP"}
 
 def read_uploaded_artist_image() -> tuple[Image.Image | None, str]:
     """
-    Reads the ``image`` field of the request. Returns the image (RGB, cut to
-    the central square) or ``None`` and the reason it was refused.
+    Reads the ``image`` field of the request. Returns the whole image (RGB) or
+    ``None`` and the reason it was refused.
     """
     file = request.files.get("image")
 
@@ -274,12 +281,28 @@ def read_uploaded_artist_image() -> tuple[Image.Image | None, str]:
     if image_format not in ARTIST_IMAGE_FORMATS:
         return None, "Only JPEG, PNG or WEBP photos are accepted"
 
-    img = ImageOps.exif_transpose(img).convert("RGB")
-    side = min(img.width, img.height)
-    left = (img.width - side) // 2
-    top = (img.height - side) // 2
+    return ImageOps.exif_transpose(img).convert("RGB"), ""
 
-    return img.crop((left, top, left + side, top + side)), ""
+
+def read_focus_point() -> tuple[tuple[float, float] | None, str]:
+    """
+    Reads the optional ``x`` and ``y`` fields of the request (the focus point, in
+    percent of the width and of the height). Without them the point is the centre.
+    """
+    raw_x, raw_y = request.form.get("x"), request.form.get("y")
+
+    if raw_x is None and raw_y is None:
+        return (50, 50), ""
+
+    try:
+        x, y = float(raw_x), float(raw_y)  # type: ignore
+    except (TypeError, ValueError):
+        return None, "Send x and y as numbers (percent)"
+
+    if not (0 <= x <= 100 and 0 <= y <= 100):
+        return None, "x and y go from 0 to 100"
+
+    return (x, y), ""
 
 
 @api.post("/<artisthash>/image")
@@ -289,7 +312,9 @@ def upload_artist_image(path: ArtistHashSchema):
     Upload the artist photo
 
     Send a JPEG, PNG or WEBP (up to 10 MB) in the ``image`` form field. The
-    photo is marked as chosen by hand, so the automatic download never replaces it.
+    square that becomes the round photo is cut around the point ``x`` and ``y``
+    (percent of the width and the height, optional: the centre without them).
+    The photo is marked as chosen by hand, so the automatic download never replaces it.
     """
     artisthash = path.artisthash
 
@@ -301,8 +326,13 @@ def upload_artist_image(path: ArtistHashSchema):
     if img is None:
         return {"error": reason}, 400
 
+    focus, reason = read_focus_point()
+
+    if focus is None:
+        return {"error": reason}, 400
+
     name = f"{artisthash}.webp"
-    DownloadImage.save_img(img, artist_image_entries(name))
+    DownloadImage.save_img(crop_square(img, *focus), artist_image_entries(name))
     set_manual_artist_image(artisthash, True)
     update_artist_color(artisthash)
 
@@ -338,6 +368,85 @@ def refetch_artist_image(path: ArtistHashSchema):
     update_artist_color(artisthash)
 
     return {"ok": True, "image": name, "source": "deezer"}
+
+
+def hero_response(artisthash: str) -> dict:
+    return {"ok": True, "hero": get_artist_hero(artisthash)}
+
+
+@api.post("/<artisthash>/hero")
+@admin_required()
+def upload_artist_hero(path: ArtistHashSchema):
+    """
+    Upload the artist hero
+
+    The wide image of the artist page: a JPEG, PNG or WEBP (up to 10 MB) in the ``image``
+    form field. It is not cropped (the page cuts it to the width it has), only made smaller
+    when it is wider than 2560 px. ``x`` and ``y`` (percent, optional, the centre without
+    them) are the focus point: the part of the image that stays in view.
+    """
+    artisthash = path.artisthash
+
+    if ArtistStore.artistmap.get(artisthash) is None:
+        return {"error": "Artist not found"}, 404
+
+    img, reason = read_uploaded_artist_image()
+
+    if img is None:
+        return {"error": reason}, 400
+
+    focus, reason = read_focus_point()
+
+    if focus is None:
+        return {"error": reason}, 400
+
+    save_artist_hero(img, artisthash, *focus)
+
+    return hero_response(artisthash)
+
+
+class HeroPositionBody(BaseModel):
+    x: float = Field(description="The focus point, percent of the width", ge=0, le=100)
+    y: float = Field(description="The focus point, percent of the height", ge=0, le=100)
+
+
+@api.post("/<artisthash>/hero/position")
+@admin_required()
+def set_artist_hero_position(path: ArtistHashSchema, body: HeroPositionBody):
+    """
+    Move the focus point of the artist hero
+
+    Only saves the point; the image is not touched.
+    """
+    artisthash = path.artisthash
+
+    if ArtistStore.artistmap.get(artisthash) is None:
+        return {"error": "Artist not found"}, 404
+
+    if get_artist_hero(artisthash) is None:
+        return {"error": "This artist has no hero"}, 404
+
+    set_hero_focus(artisthash, body.x, body.y)
+
+    return hero_response(artisthash)
+
+
+@api.delete("/<artisthash>/hero")
+@admin_required()
+def delete_artist_hero(path: ArtistHashSchema):
+    """
+    Remove the artist hero
+
+    The page goes back to the checkerboard.
+    """
+    artisthash = path.artisthash
+
+    if ArtistStore.artistmap.get(artisthash) is None:
+        return {"error": "Artist not found"}, 404
+
+    remove_artist_hero(artisthash)
+
+    return hero_response(artisthash)
 
 
 class RenameArtistBody(BaseModel):

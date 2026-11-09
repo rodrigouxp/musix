@@ -213,6 +213,24 @@ def send_md_artist_image(path: ImagePath):
     return send_file_or_fallback(folder, path.imgpath, "artist.webp")
 
 
+@api.get("/artist/hero/<imgpath>")
+def send_artist_hero_image(path: ImagePath):
+    """
+    Get the artist hero (up to 2560 px wide). 404 when the artist has none.
+    """
+    folder = Paths().artist_hero_img_path
+    return send_from_directory(str(folder), path.imgpath)
+
+
+@api.get("/artist/hero/small/<imgpath>")
+def send_sm_artist_hero_image(path: ImagePath):
+    """
+    Get the small artist hero (up to 1280 px wide), for narrow screens.
+    """
+    folder = Paths().sm_artist_hero_img_path
+    return send_from_directory(str(folder), path.imgpath)
+
+
 # PLAYLISTS
 class PlaylistImagePath(BaseModel):
     imgpath: str = Field(

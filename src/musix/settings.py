@@ -337,6 +337,8 @@ class Paths(metaclass=Singleton):
             "images/artists/medium",
             "images/artists/small",
             "images/artists/large",
+            "images/artists/hero",
+            "images/artists/hero/small",
         ]
 
         for folder in dirs:
@@ -398,6 +400,15 @@ class Paths(metaclass=Singleton):
     @property
     def lg_artist_img_path(self) -> pathlib.Path:
         return self.artist_img_path / "large"
+
+    # the hero of the artist page: a wide image, chosen by hand, that is not cropped
+    @property
+    def artist_hero_img_path(self) -> pathlib.Path:
+        return self.artist_img_path / "hero"
+
+    @property
+    def sm_artist_hero_img_path(self) -> pathlib.Path:
+        return self.artist_hero_img_path / "small"
 
     # TRACK THUMBNAILS
     @property
@@ -482,6 +493,9 @@ class Defaults:
 
     SM_ARTIST_IMG_SIZE = 128
     MD_ARTIST_IMG_SIZE = 256
+    # widest side of the hero image: the big one (wide screens) and the small one (narrow screens)
+    LG_ARTIST_HERO_WIDTH = 2560
+    SM_ARTIST_HERO_WIDTH = 1280
 
     HASH_LENGTH = 16
     API_ALBUMHASH = "bfe300e966"

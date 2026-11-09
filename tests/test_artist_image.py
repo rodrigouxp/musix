@@ -23,6 +23,8 @@ def paths(tmp_path, monkeypatch):
         sm_artist_img_path=root / "small",
         md_artist_img_path=root / "medium",
         lg_artist_img_path=root / "large",
+        artist_hero_img_path=root / "hero",
+        sm_artist_hero_img_path=root / "hero" / "small",
     )
     for folder in (fake.sm_artist_img_path, fake.md_artist_img_path, fake.lg_artist_img_path):
         folder.mkdir(parents=True)
@@ -180,3 +182,47 @@ def test_automatic_search_never_replaces_a_manual_photo(http, paths, monkeypatch
     monkeypatch.setattr(artistlib, "get_artist_image_link", fail)
 
     CheckArtistImages.download_image(SimpleNamespace(name="x", artisthash=ARTISTHASH))
+
+
+def two_color_png(size=(400, 200)) -> BytesIO:
+    """Left half red, right half blue."""
+    img = Image.new("RGB", size, (255, 0, 0))
+    img.paste((0, 0, 255), (size[0] // 2, 0, size[0], size[1]))
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    buffer.seek(0)
+    return buffer
+
+
+def upload_with_focus(http, data, x, y):
+    return http.post(
+        f"/artist/{ARTISTHASH}/image",
+        data={"image": (data, "photo.png"), "x": x, "y": y},
+        content_type="multipart/form-data",
+    )
+
+
+def test_focus_point_moves_the_square_of_the_photo(http, paths):
+    # a 400 x 200 photo: the square is 200 x 200 and the focus point decides which one
+    assert upload_with_focus(http, two_color_png(), 0, 50).status_code == 200
+    with Image.open(paths.lg_artist_img_path / f"{ARTISTHASH}.webp") as lg:
+        assert lg.size == (200, 200)
+        assert lg.convert("RGB").getpixel((100, 100))[0] > 200  # the left part: red
+
+    assert upload_with_focus(http, two_color_png(), 100, 50).status_code == 200
+    with Image.open(paths.lg_artist_img_path / f"{ARTISTHASH}.webp") as lg:
+        assert lg.convert("RGB").getpixel((100, 100))[2] > 200  # the right part: blue
+
+
+def test_without_a_focus_point_the_square_is_the_centre(http, paths):
+    assert upload(http, two_color_png()).status_code == 200
+    with Image.open(paths.lg_artist_img_path / f"{ARTISTHASH}.webp") as lg:
+        pixels = lg.convert("RGB")
+        assert pixels.getpixel((5, 100))[0] > 200  # red on the left of the square
+        assert pixels.getpixel((195, 100))[2] > 200  # blue on the right
+
+
+@pytest.mark.parametrize("x,y", [("abc", "50"), ("50", ""), ("-1", "50"), ("50", "101")])
+def test_a_bad_focus_point_is_400(http, paths, x, y):
+    assert upload_with_focus(http, png_bytes(), x, y).status_code == 400
+    assert not list(paths.sm_artist_img_path.iterdir())
