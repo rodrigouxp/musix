@@ -13,6 +13,11 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.24.1 (2026-11-09)
+
+- **Página do artista: sem ícone de arrastar na lista de faixas.** No hover da linha o número agora fica onde está, sem virar o ícone de arrastar (não há para onde soltar a faixa: arrastar fica só nas playlists, por enquanto).
+- Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.24.0 (2026-11-09)
 
 - **Nova página do artista, etapa B: hero, abas e "Most played tracks".** No desktop (a partir de 601 px, layout padrão) a página do artista vira um painel com borda que rola por dentro, no lugar do cabeçalho antigo:
