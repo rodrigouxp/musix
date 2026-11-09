@@ -13,6 +13,16 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.24.0 (2026-11-09)
+
+- **Nova página do artista, etapa B: hero, abas e "Most played tracks".** No desktop (a partir de 601 px, layout padrão) a página do artista vira um painel com borda que rola por dentro, no lugar do cabeçalho antigo:
+  - **Hero:** 400 px de altura (280 a 400 px conforme a largura do painel, proporção 1319 x 400), padding `20 12`, o nome do artista em `screen-title-48px` (uma linha, com reticências), os números (`203 Tracks • 14 Albums • 17 hrs, 52 minutes`, `paragraph-14px`) e os botões: play (40 px, vira pause quando a fila é a deste artista e está tocando; toca "Most played tracks" em ordem), favoritar (32 px, coração em `error/300`) e opções (14 x 32, abre o menu do artista). Enquanto não há imagem de capa (vem na etapa D) o fundo é o quadriculado de 16 px (`neutral-900` e `neutral-700`) com o degradê até `#070707` (sem estilo no Figma, a confirmar).
+  - **Barra de abas:** 44 px, fixa no topo ao rolar. Abas: Most played tracks, Albums, EPs & Singles, Lives, Appearances, Compilations (e Soundtracks só se houver). A aba aberta vai na URL (`?tab=albums`, o botão voltar volta à aba anterior) e as setas esquerda e direita movem entre as abas. Novo estilo de texto `action-button-16px` (Bold 16).
+  - **Aba "Most played tracks":** todas as faixas do artista por reproduções, em uma lista virtual. A linha segue o Figma (64 px, número, capa de 48, título, artista, álbum, coração, tempo, opções; hover em `neutral-700`; no hover o número vira o ícone de arrastar). Um clique toca a partir da faixa, o clique direito abre o menu da faixa. Em painéis estreitos a coluna do álbum, depois a do artista e por fim o número e o coração saem.
+  - As abas de lançamentos (Albums, EPs & Singles, Lives, Appearances, Compilations) ainda não têm conteúdo (etapa C): ficam em branco, e a linha "Nothing here yet" aparece quando não há nada.
+  - O cabeçalho antigo (foto ao lado, botão de editar foto e de renomear), os gêneros, as estatísticas e os artistas parecidos não aparecem mais nesse layout (o código continua). Celular (até 600 px) e layout alternativo seguem com a página antiga.
+- Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.23.0 (2026-11-09)
 
 - **Formato e bitrate no QueuePanel** (nova página do artista, etapa A). A etiqueta que o cartão antigo do painel da esquerda mostrava (por exemplo `FLAC • 3200`) volta **sobre a capa do álbum** da Queue, no canto inferior esquerdo, a 8 px das bordas e sem tapar o disco. É o mesmo componente de antes (`Bitrate.vue`), com os tokens de etiqueta do app: fundo `neutral-700`, raio 4, padding `1 4`, texto `paragraph-12px` em `neutral-100`. Some quando a faixa não tem bitrate; o `title` explicativo continua. O Figma não tem desenho para ela: medidas e cores são uma decisão provisória.
