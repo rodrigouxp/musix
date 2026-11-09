@@ -13,6 +13,11 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.26.1 (2026-11-09)
+
+- **Página do artista, lista de faixas:** o número de ordem passa para `paragraph-12px` em `neutral-300`. E volta a função de ver **quantas vezes a faixa foi tocada**: ao passar o mouse sobre a linha, "12 plays" (ou "unplayed") aparece no fim, no lugar do coração, do tempo e das opções (`paragraph-14px`, `neutral-300`; estilo e cor são decisão minha). Com o mouse sobre esses botões eles voltam, para não ficarem invisíveis e clicáveis ao mesmo tempo.
+- Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.26.0 (2026-11-09)
 
 - **Nova página do artista, etapa D: hero com imagem, thumbnail com ponto de foco e o menu do artista novo.**
