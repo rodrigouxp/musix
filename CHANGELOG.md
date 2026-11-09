@@ -13,6 +13,13 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.25.0 (2026-11-09)
+
+- **Nova página do artista, etapa C: abas de lançamentos e cartão de álbum com duas variantes.**
+  - **Abas Albums, EPs & Singles, Lives, Appearances, Compilations (e Soundtracks, quando houver):** todos os álbuns do artista, do mais novo ao mais antigo, em grade (até 8 colunas, 20 px entre colunas e linhas, padding `40 8 20 8`), no lugar do carrossel que rolava de lado. A lista completa vem do servidor quando a aba abre. Uma aba sem nada mostra a linha "Nothing here yet". Em painéis mais estreitos a grade perde colunas (cartão de no mínimo 120 px). As rotas "ver tudo" continuam no app, só a página não as usa mais.
+  - **Cartão de álbum (`AlbumThumb`) com duas variantes:** `home` (nome, artista e ano: Home, "View history" e a aba Appearances) e `artist` (nome e ano: as outras abas). Novo estilo de texto `album-title-16px` para o nome (cor `neutral-100`), artista e ano em `paragraph-14px` `neutral-300`, sem gaps entre a capa e as linhas. A Home passa a mostrar o ano. O servidor já mandava o ano em todos os cartões; sem data, o ano some.
+- Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.24.1 (2026-11-09)
 
 - **Página do artista: sem ícone de arrastar na lista de faixas.** No hover da linha o número agora fica onde está, sem virar o ícone de arrastar (não há para onde soltar a faixa: arrastar fica só nas playlists, por enquanto).
