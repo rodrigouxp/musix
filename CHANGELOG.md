@@ -13,6 +13,11 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.23.0 (2026-11-09)
+
+- **Formato e bitrate no QueuePanel** (nova página do artista, etapa A). A etiqueta que o cartão antigo do painel da esquerda mostrava (por exemplo `FLAC • 3200`) volta **sobre a capa do álbum** da Queue, no canto inferior esquerdo, a 8 px das bordas e sem tapar o disco. É o mesmo componente de antes (`Bitrate.vue`), com os tokens de etiqueta do app: fundo `neutral-700`, raio 4, padding `1 4`, texto `paragraph-12px` em `neutral-100`. Some quando a faixa não tem bitrate; o `title` explicativo continua. O Figma não tem desenho para ela: medidas e cores são uma decisão provisória.
+- Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.22.1 (2026-11-07)
 
 - **Largura máxima dos painéis laterais:** 224 px o painel da esquerda e 280 px a Queue (os tamanhos do Figma). Abaixo disso continuam com 25% da largura da janela; a 1400 px ou mais ficam nos tamanhos de antes.
