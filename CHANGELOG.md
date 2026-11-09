@@ -13,6 +13,11 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.26.3 (2026-11-09)
+
+- **Busca da TopBar:** o ícone da lupa passa a ter o glifo de 18 x 18 px (era 20), o texto usa o novo estilo `paragraph-16px` (Medium 16) e o espaço entre a lupa e o texto é de 12 px (era 24). O peso Medium do `paragraph-16px` segue o dos outros `paragraph`: não foi informado, decisão minha.
+- Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.26.2 (2026-11-09)
 
 - **TopBar:** a busca não passa de **500 px** de largura. O que sobra fica antes do avatar, que continua na borda direita (com o título de uma página, é o título que vai para a direita).
