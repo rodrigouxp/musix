@@ -13,6 +13,13 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.26.4 (2026-11-10)
+
+- **Layout antigo do desktop removido:** de 601 px para cima o app agora é sempre o layout de painéis (SidePanel, TopBar, página, QueuePanel e PlayerBar), em qualquer largura e em qualquer navegador. Antes, quem tinha o layout "alternate" salvo (o padrão de um navegador novo) via a versão antiga em telas acima de 900 px, como no notebook de 1203 x 603. Até 600 px o celular continua exatamente como era.
+- **Saíram do projeto:** o layout alternativo (links no topo), a barra lateral direita antiga (Ctrl+B, abas de início, busca e fila), as opções de Configurações "Usar layout sem barra lateral", "Alternar barra lateral direita", "Largura total" (já não fazia nada nos painéis) e "Ocultar a capa do painel esquerdo", e o código da barra de player antiga do desktop. O que o celular usa (barra de baixo, páginas antigas, fila do Now Playing) ficou.
+- Conferido no navegador: o CSS computado de 8 telas em 1857, 1203 (x 603), 960, 900 e 700 px, com o layout antigo salvo, é idêntico ao dos painéis de antes; em 375 e 600 px é idêntico ao do celular de antes. A única diferença é a lupa da busca (sem efeito visual).
+- Só o cliente mudou; o servidor só sobe a versão. As telas que ainda não foram redesenhadas (Álbum, Playlist, Pasta, Busca, Configurações) seguem como estavam, agora dentro dos painéis.
+
 ## 3.26.3 (2026-11-09)
 
 - **Busca da TopBar:** o ícone da lupa passa a ter o glifo de 18 x 18 px (era 20), o texto usa o novo estilo `paragraph-16px` (Medium 16) e o espaço entre a lupa e o texto é de 12 px (era 24). O peso Medium do `paragraph-16px` segue o dos outros `paragraph`: não foi informado, decisão minha.
