@@ -13,6 +13,12 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.26.5 (2026-11-10)
+
+- **Linha de faixa da página do artista:** o número de ordem fica sempre a 20 px da miniatura do álbum e do nome da faixa. Antes a coluna reservava a largura de 3 dígitos de 12 px e o número ficava à esquerda, então a distância passava de 50 px. Agora a coluna tem só a largura dos dígitos (8 px cada, tabulares) e o número fica alinhado à direita, de modo que o espaço é 20 px em qualquer número e as miniaturas continuam alinhadas. O Figma reserva 12 px para 1 dígito; seguiu-se o pedido de 20 px.
+- **Texto da linha:** nome da faixa, nome do artista e nome do álbum passam a usar `paragraph-16px` (Medium 16); antes eram `track-title-18px` (Bold 18). O número (`paragraph-12px`) e o tempo (`paragraph-14px`) não mudaram.
+- Conferido no navegador em 1203 px: distância de 20,00 px nos números de 1 e 2 dígitos e os três textos medindo 16 px, peso 500. Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.26.4 (2026-11-10)
 
 - **Layout antigo do desktop removido:** de 601 px para cima o app agora é sempre o layout de painéis (SidePanel, TopBar, página, QueuePanel e PlayerBar), em qualquer largura e em qualquer navegador. Antes, quem tinha o layout "alternate" salvo (o padrão de um navegador novo) via a versão antiga em telas acima de 900 px, como no notebook de 1203 x 603. Até 600 px o celular continua exatamente como era.
