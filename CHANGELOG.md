@@ -13,6 +13,10 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.28.3 (2026-11-12)
+
+- **Página do álbum:** os artistas do álbum não mostram mais o botão de play (nem o escurecido que vinha com ele) ao passar o mouse; o clique só abre a página do artista. Na Home e nas páginas de histórico o card continua como antes (novo `no-play` no `ArtistThumb`). Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.28.2 (2026-11-12)
 
 - **Página do álbum (AlbumPanel):** o padding do painel passa a ser 8 px nas laterais, 8 px em cima e 20 px embaixo (era 20 em volta). As duas colunas dividem a largura como no Figma (as duas "fill"): a coluna "album" tem no máximo 400 px e a capa (`album-cover`) enche a coluna mantendo 1:1, então em janelas menores a capa encolhe e a lista de faixas continua ao lado do álbum. A coluna única (álbum em cima, faixas embaixo) agora só entra quando o painel tem 600 px ou menos (antes 900; decisão minha).
