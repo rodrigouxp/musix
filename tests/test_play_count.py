@@ -202,3 +202,51 @@ def test_most_played_first_breaks_ties_by_time_and_then_by_title():
         "apple",
         "Banana",
     ]
+
+
+def add_scrobbles(rows):
+    for trackhash, duration in rows:
+        ScrobbleTable.insert_one(
+            {
+                "trackhash": trackhash,
+                "duration": duration,
+                "timestamp": 1_700_000_000,
+                "source": "",
+                "userid": 2,
+                "extra": {},
+            }
+        )
+
+
+def test_the_lists_of_the_home_count_plays_and_not_skips(stores, monkeypatch):
+    from musix.utils import stats
+
+    stores[OTHER].albumhash = "second"
+    stores[OTHER].artists = [{"name": "Guest", "artisthash": "guest"}]
+    album = lambda h: SimpleNamespace(
+        album=SimpleNamespace(albumhash=h, title=h, playcount=99, playduration=99)
+    )
+    monkeypatch.setattr(
+        AlbumStore, "albummap", {"album": album("album"), "second": album("second")}
+    )
+    # the first album: 2 plays and a skip; the second: only skips
+    add_scrobbles([(LONG, 200), (LONG, 40), (LONG, 6), (OTHER, 9), (OTHER, 7)])
+
+    albums = {a.albumhash: a for a in stats.get_albums_in_period(0, 2_000_000_000)}
+    assert (albums["album"].playcount, albums["album"].playduration) == (2, 246)
+    assert (albums["second"].playcount, albums["second"].playduration) == (0, 16)
+    # the album of the store is not touched
+    assert AlbumStore.albummap["album"].album.playcount == 99
+
+    artists = {a["artisthash"]: a for a in stats.get_artists_in_period(0, 2_000_000_000)}
+    assert (artists["artist"]["playcount"], artists["artist"]["playduration"]) == (2, 246)
+    assert artists["guest"]["playcount"] == 0
+
+    tracks, total, duration = stats.get_tracks_in_period(0, 2_000_000_000)
+    assert total == 2
+    assert duration == 262
+
+    # by play count, what was only skipped is left out; a tie goes to the longer listen
+    assert [a.albumhash for a in scrobble_api.sort_albums(list(albums.values()), "playcount")] == ["album"]
+    assert [a["artisthash"] for a in scrobble_api.sort_artists(list(artists.values()), "playcount")] == ["artist"]
+    assert [a.albumhash for a in scrobble_api.sort_albums(list(albums.values()), "playduration")] == ["album", "second"]

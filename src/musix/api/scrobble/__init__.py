@@ -219,8 +219,23 @@ def get_top_tracks(query: ChartItemsQuery):
     }, 200
 
 
+def _other(order_by: str):
+    return "playduration" if order_by == "playcount" else "playcount"
+
+
 def sort_tracks(tracks: list[Track], order_by: Literal["playcount", "playduration"]):
-    return sorted(tracks, key=lambda x: getattr(x, order_by), reverse=True)
+    """
+    Most played first; a tie is broken by the other number. A list by play count
+    leaves out what was only skipped (no play counted).
+    """
+    if order_by == "playcount":
+        tracks = [t for t in tracks if t.playcount > 0]
+
+    return sorted(
+        tracks,
+        key=lambda x: (getattr(x, order_by), getattr(x, _other(order_by))),
+        reverse=True,
+    )
 
 
 @api.get("/top-artists")
@@ -275,7 +290,12 @@ def get_top_artists(query: ChartItemsQuery):
 
 
 def sort_artists(artists, order_by):
-    return sorted(artists, key=lambda x: x[order_by], reverse=True)
+    if order_by == "playcount":
+        artists = [a for a in artists if a["playcount"] > 0]
+
+    return sorted(
+        artists, key=lambda x: (x[order_by], x[_other(order_by)]), reverse=True
+    )
 
 
 @api.get("/top-albums")
@@ -322,7 +342,14 @@ def get_top_albums(query: ChartItemsQuery):
 
 
 def sort_albums(albums: list[Album], order_by: Literal["playcount", "playduration"]):
-    return sorted(albums, key=lambda x: getattr(x, order_by), reverse=True)
+    if order_by == "playcount":
+        albums = [a for a in albums if a.playcount > 0]
+
+    return sorted(
+        albums,
+        key=lambda x: (getattr(x, order_by), getattr(x, _other(order_by))),
+        reverse=True,
+    )
 
 
 @api.get("/stats")

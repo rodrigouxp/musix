@@ -3,6 +3,7 @@ import copy
 
 from typing import Any, Callable, TypeVar, List
 from musix.db.userdata import ScrobbleTable
+from musix.lib.playcount import counts_as_play
 from musix.models.stats import StatItem
 from musix.models.track import Track
 from musix.models.album import Album
@@ -31,8 +32,13 @@ def get_artists_in_period(
 
             artists[artisthash]["artist"] = artist["name"]
             artists[artisthash]["artisthash"] = artist["artisthash"]
-            artists[artisthash]["playcount"] += 1
             artists[artisthash]["playduration"] += scrobble.duration
+
+            # INFO: a skipped track adds its time but is not a play (musix.lib.playcount)
+            if not counts_as_play(scrobble.duration, track.duration):
+                continue
+
+            artists[artisthash]["playcount"] += 1
 
             # index the track counts too
             artists[artisthash]["tracks"][track.trackhash] = (
@@ -56,15 +62,18 @@ def get_albums_in_period(start_time: int, end_time: int, userid: int | None = No
         album_entry = AlbumStore.albummap.get(track.albumhash)
         if not album_entry:
             continue
-        album_entry = copy.deepcopy(album_entry)
 
         albumhash = album_entry.album.albumhash
         if albumhash not in albums:
-            albums[albumhash] = album_entry.album
+            # INFO: one copy per album (it was one per scrobble: slow with a long history)
+            albums[albumhash] = copy.deepcopy(album_entry.album)
             albums[albumhash].playcount = 0
             albums[albumhash].playduration = 0
 
-        albums[albumhash].playcount += 1
+        # INFO: a skipped track adds its time but is not a play (musix.lib.playcount)
+        if counts_as_play(scrobble.duration, track.duration):
+            albums[albumhash].playcount += 1
+
         albums[albumhash].playduration += scrobble.duration
 
     return list(albums.values())
@@ -78,7 +87,6 @@ def get_tracks_in_period(start_time: int, end_time: int, userid: int | None = No
     total = 0
 
     for scrobble in scrobbles:
-        total += 1
         if scrobble.trackhash not in tracks:
             try:
                 track = copy.deepcopy(
@@ -91,7 +99,11 @@ def get_tracks_in_period(start_time: int, end_time: int, userid: int | None = No
             tracks[scrobble.trackhash].playcount = 0
             tracks[scrobble.trackhash].playduration = 0
 
-        tracks[scrobble.trackhash].playcount += 1
+        # INFO: a skipped track adds its time but is not a play (musix.lib.playcount)
+        if counts_as_play(scrobble.duration, tracks[scrobble.trackhash].duration):
+            tracks[scrobble.trackhash].playcount += 1
+            total += 1
+
         tracks[scrobble.trackhash].playduration += scrobble.duration
         duration += scrobble.duration
 

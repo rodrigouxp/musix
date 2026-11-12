@@ -13,6 +13,14 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.28.1 (2026-11-12)
+
+- **Home, "Most played artists" e "Most played albums" não atualizavam.** As listas só eram pedidas ao abrir a Home, e até a 3.27 o play só era registrado quando a próxima faixa começava; com a Home aberta nada mudava. Agora a Home pede as listas de novo sempre que um play é contado (30 s ou metade da faixa).
+  - **Servidor:** as listas por período (`/logger/top-artists`, `/top-albums`, `/top-tracks` e as estatísticas) passam a usar a mesma regra de play da 3.28.0: faixa pulada soma tempo mas não conta, e quem só foi pulado não entra na lista por contagem. Empate na contagem vai para quem tem mais tempo ouvido. A soma por álbum fazia uma cópia do álbum a cada registro do histórico; agora faz uma por álbum (mais rápido com histórico longo).
+- **Página do álbum, capa:** a capa tem sempre 400 x 400 px. Antes ela encolhia em janela baixa (até 120 px) para o lado esquerdo caber sem rolar; agora, quando não cabe, o lado esquerdo rola. O espaço da barra de rolagem fica fora dos 400 px, e as faixas continuam a 20 px da capa.
+- **Decisão minha:** o painel do álbum vira uma coluna só (álbum em cima, faixas embaixo) abaixo de 900 px de largura (era 760), porque a coluna do álbum agora é fixa em 400 px e as faixas ficariam espremidas.
+- Conferido: testes do servidor (um novo para as listas da Home; a suíte toda passa, 357) e, no navegador com uma API simulada, as duas listas apareceram na Home aberta assim que o play foi contado; capa de 400,00 x 400,00 px em 1600 x 620, 1600 x 1100 e no painel de 850 px, com 20 px até as faixas. **Não conferido com o servidor real nem com o histórico real.**
+
 ## 3.28.0 (2026-11-12)
 
 - **"Most played" corrigido (servidor e cliente).** O Rodrigo notou que o contador no hover não mudava ao tocar uma faixa e que as faixas do topo de alguns artistas não eram as mais ouvidas.
