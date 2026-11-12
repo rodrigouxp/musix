@@ -13,6 +13,11 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.27.2 (2026-11-11)
+
+- **AlbumThumb e ArtistThumb:** a imagem não tem mais a borda de 1 px por dentro (era `neutral-900`), em todos os lugares onde os dois cartões aparecem (Home, página do artista, página do álbum, "View history").
+- Conferido no navegador (API simulada): cartões de álbum na página do artista e artistas na página do álbum sem a borda. Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.27.1 (2026-11-11)
 
 - **Página do álbum, título e ano:** o ano fica ao lado da última palavra do título, a 12 px (era 10), e desce de linha junto com o texto quando o título é grande. Antes, um título de mais de uma linha jogava o ano sozinho para a linha de baixo.
