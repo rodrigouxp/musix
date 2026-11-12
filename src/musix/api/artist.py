@@ -35,7 +35,7 @@ from musix.lib.artistlib import (
     set_manual_artist_image,
     update_artist_color,
 )
-from musix.lib.sortlib import sort_tracks
+from musix.lib.playcount import most_played_first, plays_text
 from musix.models.track import Track
 
 from musix.serializers.album import serialize_for_card_many
@@ -77,7 +77,7 @@ def get_artist(path: ArtistHashSchema, query: GetArtistQuery):
         return {"error": "Artist not found"}, 404
 
     tracks = TrackStore.get_tracks_by_trackhashes(entry.trackhashes)
-    tracks = sort_tracks(tracks, key="playcount", reverse=True)
+    tracks = most_played_first(tracks)
     tcount = len(tracks)
 
     artist = entry.artist
@@ -105,11 +105,7 @@ def get_artist(path: ArtistHashSchema, query: GetArtistQuery):
     tracks = [
         {
             **serialize_track(t),
-            "help_text": (
-                "unplayed"
-                if t.playcount == 0
-                else f"{t.playcount} play{'' if t.playcount == 1 else 's'}"
-            ),
+            "help_text": plays_text(t.playcount),
         }
         for t in tracks
     ]
@@ -217,15 +213,11 @@ def get_all_artist_tracks(path: ArtistHashSchema):
     Returns all artists by a given artist.
     """
     tracks = ArtistStore.get_artist_tracks(path.artisthash)
-    tracks = sort_tracks(tracks, key="playcount", reverse=True)
+    tracks = most_played_first(tracks)
     tracks = [
         {
             **serialize_track(t),
-            "help_text": (
-                "unplayed"
-                if t.playcount == 0
-                else f"{t.playcount} play{'' if t.playcount == 1 else 's'}"
-            ),
+            "help_text": plays_text(t.playcount),
         }
         for t in tracks
     ]

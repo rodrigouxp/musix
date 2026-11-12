@@ -13,6 +13,20 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.28.0 (2026-11-12)
+
+- **"Most played" corrigido (servidor e cliente).** O Rodrigo notou que o contador no hover não mudava ao tocar uma faixa e que as faixas do topo de alguns artistas não eram as mais ouvidas.
+  - **O que conta como play:** uma faixa conta quando foi ouvida por **30 segundos ou metade da duração, o que for menor** (`musix/lib/playcount.py`). Antes, qualquer execução de 5 segundos contava, então faixa pulada pesava igual a faixa ouvida inteira. A regra vale também para o histórico: ao carregar, o servidor só conta como play os registros que passam nela (nada é apagado do banco; o tempo ouvido continua somando). **Os números vão cair** nas faixas que eram muito puladas.
+  - **O play é registrado durante a faixa:** o cliente envia o play assim que ele conta e, quando a faixa termina ou é trocada, envia o resto do tempo ouvido como extensão do mesmo registro (`extend` em `POST /logger/track/log`). Antes o play só era enviado quando a PRÓXIMA faixa começava, então a última faixa da fila não era registrada até lá. Faixa pulada não envia nada.
+  - **Contador ao vivo:** a resposta do registro traz a contagem nova e a página do artista atualiza o "12 plays" da faixa na hora, sem mudar a ordem da lista (a ordem se refaz ao abrir a página de novo).
+  - **Tempo ouvido medido pelo áudio:** o cliente soma o avanço da posição do áudio, não o relógio; seek, pausa e aba em segundo plano não somam nem perdem tempo. Saíram o Worker criado a cada registro (nunca era encerrado) e os listeners que se acumulavam nos elementos de áudio.
+  - **Ao iniciar, o servidor carrega os plays de todos os usuários.** Antes carregava só os do usuário de id 1 (o mapeamento roda fora de uma requisição), mas somava ao vivo os de qualquer usuário: os números mudavam a cada reinício.
+  - **Desempate:** com a mesma contagem, vem primeiro quem tem mais tempo ouvido e depois a ordem alfabética (A a Z). Antes o empate saía de Z a A.
+- **Página do álbum, artistas:** primeiro os artistas do álbum, depois todos os que participam de alguma faixa (na ordem das faixas), cada um uma vez.
+- **Decisão minha (o Rodrigo pode mudar):** o limite de 30 segundos ou metade da faixa.
+- **Não feito:** o play continua creditado ao álbum e aos artistas do primeiro arquivo de um grupo de faixas duplicadas, não necessariamente o arquivo tocado.
+- Conferido: testes novos do servidor (`tests/test_play_count.py`, 9; a suíte toda passa, 356) e, no navegador com uma API simulada e áudio de verdade, uma faixa de 20 s contou aos 11 s com o hover passando de "unplayed" para "1 play", a troca de faixa enviou a extensão de 25 s, e uma faixa pulada aos 7 s não enviou nada; artistas do álbum na ordem certa. **Não conferido com o servidor real nem com o histórico real.**
+
 ## 3.27.2 (2026-11-11)
 
 - **AlbumThumb e ArtistThumb:** a imagem não tem mais a borda de 1 px por dentro (era `neutral-900`), em todos os lugares onde os dois cartões aparecem (Home, página do artista, página do álbum, "View history").

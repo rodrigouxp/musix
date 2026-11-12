@@ -403,6 +403,33 @@ class ScrobbleTable(Base):
             yield tracklog_to_dataclass(i)
 
     @classmethod
+    def extend_last(cls, trackhash: str, duration: int, userid: int | None = None):
+        """
+        Adds listened seconds to the latest scrobble of a track by a user: the
+        client logs a play as soon as it counts, and sends the rest of the time
+        listened when the track ends.
+        """
+        if userid is None:
+            userid = get_current_userid()
+
+        latest = (
+            select(cls.id)
+            .where(and_(cls.userid == userid, cls.trackhash == trackhash))
+            .order_by(cls.timestamp.desc(), cls.id.desc())
+            .limit(1)
+            .scalar_subquery()
+        )
+
+        return next(
+            cls.execute(
+                update(cls)
+                .where(cls.id == latest)
+                .values(duration=cls.duration + duration),
+                commit=True,
+            )
+        )
+
+    @classmethod
     def update_trackhash(cls, old: str, new: str):
         """
         Re-keys all scrobbles of a track whose trackhash changed.

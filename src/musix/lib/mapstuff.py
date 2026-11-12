@@ -1,4 +1,5 @@
 from musix.db.userdata import LibDataTable, FavoritesTable, ScrobbleTable
+from musix.lib.playcount import counts_as_play
 from musix.store.albums import AlbumStore
 from musix.store.artists import ArtistStore
 from musix.store.folder import FolderStore
@@ -75,15 +76,29 @@ def map_scrobble_data():
     The scrobble data is loaded from the database and grouped by trackhash.
     The album and artist scrobble data (for those tracks) are then incremented based on the data.
     """
-    records = ScrobbleTable.get_all(0, None)
+    # INFO: The scrobbles of ALL users. This runs at boot and after a scan,
+    # outside any request: `ScrobbleTable.get_all` would fall back to the user
+    # with id 1 there, while the plays logged at runtime are added to the stores
+    # whoever the user is. Reading all of them keeps the two in agreement.
+    records = ScrobbleTable.get_all_unfiltered()
 
     # group records by trackhash
     grouped: dict[str, dict[str, Any]] = {}
 
     for record in records:
+        group = TrackStore.trackhashmap.get(record.trackhash)
+        if group is None:
+            continue
+
         # aggregate playcount, playduration and lastplayed
         item = grouped.setdefault(record.trackhash, {})
-        item["playcount"] = item.get("playcount", 0) + 1
+        item.setdefault("playcount", 0)
+
+        # INFO: a listen that is too short (a skipped track) adds its time but is
+        # not a play; this also applies to the scrobbles logged before the rule
+        if counts_as_play(record.duration, group.tracks[0].duration):
+            item["playcount"] += 1
+
         item["playduration"] = item.get("playduration", 0) + record.duration
         item["lastplayed"] = max(item.get("lastplayed", 0), record.timestamp)
 

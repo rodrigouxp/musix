@@ -9,6 +9,7 @@ import locale
 
 from musix.db.userdata import FavoritesTable, ScrobbleTable
 from musix.lib.extras import get_extra_info
+from musix.lib.playcount import counts_as_play, plays_text
 from musix.lib.recipes.recents import RecentlyPlayed
 from musix.models.album import Album
 from musix.models.stats import StatItem
@@ -55,6 +56,10 @@ class LogTrackBody(TrackHashSchema):
             ]
         },
     )
+    extend: bool = Field(
+        False,
+        description="Add the duration to the latest play of this track instead of logging a new play",
+    )
 
 
 def format_date(start: float, end: float):
@@ -69,39 +74,64 @@ def log_track(body: LogTrackBody):
     timestamp = body.timestamp
     duration = body.duration
 
-    if not timestamp or duration < 5:
+    if not timestamp or duration < 1:
         return {"msg": "Invalid entry."}, 400
 
     trackentry = TrackStore.trackhashmap.get(body.trackhash)
     if trackentry is None:
         return {"msg": "Track not found."}, 404
 
-    scrobble_data = dict(body)
-    # REVIEW: Do we need to store the extra info in the database?
-    # OR .... can we just write it to the backup file on demand?
-    scrobble_data["extra"] = get_extra_info(body.trackhash, "track")
-    ScrobbleTable.add(scrobble_data)
+    track = trackentry.tracks[0]
 
-    # NOTE: Update the recently played homepage for this userid
-    RecentlyPlayed(userid=scrobble_data["userid"])
+    def counts():
+        playcount = trackentry.tracks[0].playcount
+        return {"playcount": playcount, "help_text": plays_text(playcount)}
+
+    if body.extend:
+        # INFO: the rest of the time listened of a play that was already logged
+        ScrobbleTable.extend_last(body.trackhash, duration)
+        playcount = 0
+    else:
+        # INFO: a skipped track is not a play (see musix.lib.playcount)
+        if not counts_as_play(duration, track.duration):
+            return {
+                "msg": "Too short to count as a play.",
+                "counted": False,
+                **counts(),
+            }, 200
+
+        scrobble_data = {
+            "trackhash": body.trackhash,
+            "timestamp": timestamp,
+            "duration": duration,
+            "source": body.source,
+        }
+        # REVIEW: Do we need to store the extra info in the database?
+        # OR .... can we just write it to the backup file on demand?
+        scrobble_data["extra"] = get_extra_info(body.trackhash, "track")
+        ScrobbleTable.add(scrobble_data)
+
+        # NOTE: Update the recently played homepage for this userid
+        RecentlyPlayed(userid=scrobble_data["userid"])
+        playcount = 1
 
     # Update play data on the in-memory stores
-    track = trackentry.tracks[0]
     album = AlbumStore.albummap.get(track.albumhash)
 
     if album:
-        album.increment_playcount(duration, timestamp)
+        album.increment_playcount(duration, timestamp, playcount)
 
     for hash in track.artisthashes:
         artist = ArtistStore.artistmap.get(hash)
 
         if artist:
-            artist.increment_playcount(duration, timestamp)
+            artist.increment_playcount(duration, timestamp, playcount)
 
-    trackentry.increment_playcount(duration, timestamp)
-    track = trackentry.tracks[0]
+    trackentry.increment_playcount(duration, timestamp, playcount)
 
-    return {"msg": "recorded"}, 201
+    return {"msg": "recorded", "counted": True, **counts()}, (
+        200 if body.extend else 201
+    )
 
 
 class ChartItemsQuery(BaseModel):
