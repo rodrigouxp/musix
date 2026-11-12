@@ -13,6 +13,14 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.28.2 (2026-11-12)
+
+- **Página do álbum (AlbumPanel):** o padding do painel passa a ser 8 px nas laterais, 8 px em cima e 20 px embaixo (era 20 em volta). As duas colunas dividem a largura como no Figma (as duas "fill"): a coluna "album" tem no máximo 400 px e a capa (`album-cover`) enche a coluna mantendo 1:1, então em janelas menores a capa encolhe e a lista de faixas continua ao lado do álbum. A coluna única (álbum em cima, faixas embaixo) agora só entra quando o painel tem 600 px ou menos (antes 900; decisão minha).
+- **Grupos da coluna "album":** o título com o ano e a linha de faixas e tempo ficam juntos num grupo `top`, sem espaço entre eles; o grupo dos gêneros perde o padding de cima e de baixo; o grupo `functions` (top, botões, gêneros e artistas) passa a ter 8 px entre os itens (era 4) e todos preenchem a largura.
+- **Barras de rolagem:** o conteúdo de cada coluna fica a 2 px da sua barra, e a barra das faixas fica a 2 px da borda do painel (a barra tem 6 px: traço de 4 px mais 2 px até a borda). Os 20 px entre a capa e as faixas continuam; a barra da coluna "album" fica dentro deles. A margem da barra passou a ser a variável `--scrollbar-edge` (3 px para as outras páginas, 2 px na do álbum).
+- **Linha de faixa (artista e álbum):** o coração sem favorito agora é neutral-300 e tem traço de 1,5 px (o contorno do ícone é 2 px, desenhado como forma). O traço usa o contorno externo do próprio coração, reduzido para o coração manter o tamanho de 20 de 24 do ícone.
+- Conferido no navegador em 1203 px (capa 400 x 400, faixas a 20 px da capa, linha 2 px antes da barra, barra a 2 px da borda), em 900 px (as duas colunas de 315 px, capa 307 x 307 em 1:1) e em 760 px (uma coluna). Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.28.1 (2026-11-12)
 
 - **Home, "Most played artists" e "Most played albums" não atualizavam.** As listas só eram pedidas ao abrir a Home, e até a 3.27 o play só era registrado quando a próxima faixa começava; com a Home aberta nada mudava. Agora a Home pede as listas de novo sempre que um play é contado (30 s ou metade da faixa).
