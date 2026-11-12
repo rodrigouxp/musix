@@ -13,6 +13,11 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.27.1 (2026-11-11)
+
+- **Página do álbum, título e ano:** o ano fica ao lado da última palavra do título, a 12 px (era 10), e desce de linha junto com o texto quando o título é grande. Antes, um título de mais de uma linha jogava o ano sozinho para a linha de baixo.
+- Conferido no navegador (API simulada) em 1600 x 900: 12,00 px com título de 1 linha e de 4 linhas, o ano na mesma linha da última palavra. Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.27.0 (2026-11-11)
 
 - **Nova página do álbum (AlbumPanel do Figma, nó 12506:4909), acima de 600 px.** Duas colunas com rolagem própria. À esquerda, o álbum: capa (400 px), título e ano, a linha "14 tracks • 52 minutes" (a mesma da página do artista, agora o componente `InfoLine`; as palavras em minúsculas nas duas páginas, antes "Tracks" e "Albums"), os botões play/pause, favorito, adicionar (menu "Add to queue" / "Add to Playlist") e options (o menu do álbum de sempre), os gêneros em pílulas e os artistas do álbum (`ArtistThumb`, o clique abre a página do artista). À direita, as faixas: as mesmas linhas da página do artista, sem a coluna do álbum. Até 600 px o celular continua com a página antiga (outras versões, "More from", álbuns parecidos e estatísticas seguem só lá).
