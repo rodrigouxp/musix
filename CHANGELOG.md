@@ -13,6 +13,12 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.28.4 (2026-11-13)
+
+- **Página do álbum:** o espaço entre o título (com as infos), os botões, os gêneros e os artistas passou de 8 para 12 px.
+- **Tela de letras:** o título "Now Playing" saiu da barra do topo (ele aparecia e sumia conforme a largura).
+- **QueuePanel agora é PlayingPanel:** a pasta, o componente, as classes (`.playing-panel`) e os tokens (`--playingpanel-*`) foram renomeados; a chave de texto também (`PlayingPanel.*`). O título "Queue" virou "Now playing", centralizado, e o texto "Clear queue" virou o ícone delete de 14 x 14 px (o vetor tem 9,33 x 12) à direita da mesma linha, em error/300; o texto continua como dica e rótulo do botão. A área de clique é de 24 px (decisão minha). O estado salvo do painel aberto/fechado (`queue_panel_open`) não mudou de nome, para não resetar a escolha de quem já usa. Só o cliente mudou; o servidor só sobe a versão.
+
 ## 3.28.3 (2026-11-12)
 
 - **Página do álbum:** os artistas do álbum não mostram mais o botão de play (nem o escurecido que vinha com ele) ao passar o mouse; o clique só abre a página do artista. Na Home e nas páginas de histórico o card continua como antes (novo `no-play` no `ArtistThumb`). Só o cliente mudou; o servidor só sobe a versão.
