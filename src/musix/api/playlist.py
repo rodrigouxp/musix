@@ -25,7 +25,7 @@ from musix.lib.home.recentlyplayed import get_recently_played_playlist
 from musix.lib.sortlib import sort_tracks
 from musix.models.playlist import Playlist
 from musix.serializers.playlist import serialize_for_card
-from musix.serializers.track import serialize_tracks
+from musix.serializers.track import serialize_tracks_with_plays
 
 from musix.store.tracks import TrackStore
 from musix.utils.dates import create_new_date, date_string_to_time_passed
@@ -90,7 +90,7 @@ def format_custom_playlist(playlist: models.Playlist, tracks: list[models.Track]
 
     return {
         "info": serialize_for_card(playlist),
-        "tracks": serialize_tracks(tracks),
+        "tracks": serialize_tracks_with_plays(tracks),
     }
 
 
@@ -274,7 +274,7 @@ def get_playlist(path: PlaylistIDPath, query: GetPlaylistQuery):
 
     return {
         "info": playlist,
-        "tracks": serialize_tracks(tracks) if not no_tracks else [],
+        "tracks": serialize_tracks_with_plays(tracks) if not no_tracks else [],
     }
 
 

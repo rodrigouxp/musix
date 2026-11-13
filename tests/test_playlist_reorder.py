@@ -159,7 +159,7 @@ def test_the_page_of_the_playlist_has_the_tracks_in_the_new_order(http, pid, mon
         return [tracks[h] for h in hashes if h in tracks]
 
     monkeypatch.setattr(TrackStore, "get_tracks_by_trackhashes", by_hashes)
-    monkeypatch.setattr(playlist_api, "serialize_tracks", lambda items: [{"trackhash": t.trackhash} for t in items])
+    monkeypatch.setattr(playlist_api, "serialize_tracks_with_plays", lambda items: [{"trackhash": t.trackhash} for t in items])
     monkeypatch.setattr(playlist_api.playlistlib, "get_first_4_images", lambda *a, **k: [])
 
     move(http, pid, "d", 0)
@@ -170,7 +170,7 @@ def test_the_page_of_the_playlist_has_the_tracks_in_the_new_order(http, pid, mon
 
 def test_limit_minus_one_gives_every_track(http, pid, monkeypatch):
     monkeypatch.setattr(TrackStore, "get_tracks_by_trackhashes", lambda hashes: [SimpleNamespace(trackhash=h, duration=1, albumhash="x") for h in hashes])
-    monkeypatch.setattr(playlist_api, "serialize_tracks", lambda items: [{"trackhash": t.trackhash} for t in items])
+    monkeypatch.setattr(playlist_api, "serialize_tracks_with_plays", lambda items: [{"trackhash": t.trackhash} for t in items])
     monkeypatch.setattr(playlist_api.playlistlib, "get_first_4_images", lambda *a, **k: [])
 
     res = http.get(f"/playlists/{pid}?limit=-1")

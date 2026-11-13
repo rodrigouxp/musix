@@ -250,3 +250,23 @@ def test_the_lists_of_the_home_count_plays_and_not_skips(stores, monkeypatch):
     assert [a.albumhash for a in scrobble_api.sort_albums(list(albums.values()), "playcount")] == ["album"]
     assert [a["artisthash"] for a in scrobble_api.sort_artists(list(artists.values()), "playcount")] == ["artist"]
     assert [a.albumhash for a in scrobble_api.sort_albums(list(albums.values()), "playduration")] == ["album", "second"]
+
+
+def test_the_tracks_of_an_album_or_playlist_come_with_the_plays_text(monkeypatch):
+    from musix.serializers import track as serializer
+
+    # only the text matters here: the dataclass of a track is not what is tested
+    monkeypatch.setattr(
+        serializer, "serialize_track", lambda t, *args, **kwargs: {"trackhash": t.trackhash}
+    )
+    tracks = [
+        SimpleNamespace(trackhash="a", playcount=0),
+        SimpleNamespace(trackhash="b", playcount=1),
+        SimpleNamespace(trackhash="c", playcount=12),
+    ]
+
+    assert [t["help_text"] for t in serializer.serialize_tracks_with_plays(tracks)] == [
+        "unplayed",
+        "1 play",
+        "12 plays",
+    ]

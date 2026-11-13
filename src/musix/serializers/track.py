@@ -1,5 +1,6 @@
 from dataclasses import asdict
 
+from musix.lib.playcount import plays_text
 from musix.models.track import Track
 
 
@@ -63,3 +64,15 @@ def serialize_tracks(tracks: list[Track], _remove: set = set(), remove_disc=True
     """
 
     return [serialize_track(t, _remove, remove_disc) for t in tracks]
+
+
+def serialize_tracks_with_plays(tracks: list[Track], _remove: set = set(), remove_disc=True) -> list[dict]:
+    """
+    Same as `serialize_tracks`, with "help_text" ("unplayed", "1 play", "12 plays") on each
+    track: the client shows it on the hover of the row of the album and playlist pages.
+    """
+
+    return [
+        {**serialize_track(t, _remove, remove_disc), "help_text": plays_text(t.playcount)}
+        for t in tracks
+    ]

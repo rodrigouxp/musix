@@ -34,7 +34,7 @@ from musix.store.tracks import TrackStore
 from musix.utils.hashing import create_hash
 from musix.lib.albumslib import sort_by_track_no
 from musix.serializers.album import serialize_for_card_many
-from musix.serializers.track import serialize_tracks
+from musix.serializers.track import serialize_tracks_with_plays
 from musix.utils.stats import get_track_group_stats
 
 
@@ -121,7 +121,7 @@ def get_album_tracks_and_info(body: GetAlbumInfoBody):
         "other_versions": other_versions,
     }
 
-    response["tracks"] = serialize_tracks(tracks, remove_disc=False)
+    response["tracks"] = serialize_tracks_with_plays(tracks, remove_disc=False)
     return response
 
 
@@ -136,7 +136,7 @@ def get_album_tracks(path: AlbumHashSchema):
     tracks = AlbumStore.get_album_tracks(path.albumhash)
     tracks = sort_by_track_no(tracks)
 
-    return serialize_tracks(tracks)
+    return serialize_tracks_with_plays(tracks)
 
 
 @api.post("/<albumhash>/refresh-cover")
