@@ -13,6 +13,16 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.31.1 (2026-11-14)
+
+Ajustes pedidos pelo Rodrigo: o ícone do álbum no grupo da fila, o nome do artista da PlayerBar, o retorno do toque nos botões e a cor da aba aberta no Now Playing do celular.
+
+- **PlayingPanel (grupo de álbum na fila):** o ícone ao lado do título do grupo é o `album` da coleção (antes era o `soundtrack`). Fica no estado `inactive` (contorno), como o `playlist` do grupo de playlist. O `soundtrack` girava; o `album` fica parado (decisão minha: o desenho do `album` não se repete a cada meia volta, então o giro pularia).
+- **PlayerBar (desktop):** o nome do artista é neutral-300 também com a música pausada (antes era neutral-500 e só tocando ia a neutral-300). O sublinhado ao passar o mouse nos nomes já existia (regra `.artistname a:hover`) e foi conferido.
+- **Retorno do toque (celular, e também no desktop):** ao apertar um botão redondo o fundo vai na hora a neutral-500 (novo token `--press-bg`) e, ao soltar, volta com a transição de 0,2 s do próprio botão, então um toque rápido ainda mostra o sinal. Vale para play, favorito e add da PlayerBar do celular, os botões do NavBarMobile, os botões do PlayingControls (shuffle, anterior, próxima, repeat, abas, play e volume) e os botões da PlayerBar do desktop. Mixin `press` em `_mixins.scss`. Um ouvinte de `touchstart` no `main.ts` faz o `:active` funcionar no Safari do iOS.
+- **PlayingControls (celular):** a aba aberta (Lyrics ou Queue) tem fundo neutral-500 (antes neutral-700).
+- Conferido no navegador com a API simulada: ícone do grupo, cor do artista (`#707070`), aba aberta (`#333333`) e regras de `:active` compiladas. **Não conferido:** o toque de verdade num celular (o navegador não simula o dedo segurando).
+
 ## 3.31.0 (2026-11-14)
 
 Os ícones novos (álbum, artista, playlist, fila, ai), Playlists no grupo de cima do SidePanel, "Recently played" na Home, o botão de favoritar e o título em carrossel na PlayerBar do celular, o Now Playing do celular como drawer e sem rolagem, as abas do artista com ícone e os cartões de álbum e artista sem o botão de play. Lido do Penpot (o Rodrigo migrou o Figma para o Penpot, arquivo "App MUSIX").
