@@ -119,6 +119,9 @@ def send_all_playlists(query: SendAllPlaylistsQuery):
         key=lambda p: datetime.strptime(p.last_updated, "%Y-%m-%d %H:%M:%S"),
         reverse=True,
     )
+    # the order the user dragged them to (`settings.order`, see /reorder) comes after the ones that have none (the new
+    # ones, by date); sorted is stable, so the ones without an order keep the date order
+    playlists.sort(key=lambda p: (1, p.settings["order"]) if isinstance(p.settings.get("order"), int) else (0, 0))
 
     for playlist in playlists:
         if not playlist.has_image:
@@ -424,6 +427,38 @@ def favorite_playlist(path: PlaylistIDPath):
 
     PlaylistTable.update_settings(playlist_id, settings)
     return {"msg": "Done", "is_favorite": settings["favorite"]}, 200
+
+
+class ReorderPlaylistsBody(BaseModel):
+    ids: list[int] = Field(
+        ...,
+        description="The ids of the playlists of a list (the pinned ones, or the others) in the order the user "
+        "wants them. Each one is saved with its position",
+    )
+
+
+@api.post("/reorder")
+def reorder_playlists(body: ReorderPlaylistsBody):
+    """
+    Save the order of the playlists of the user.
+
+    Each playlist of the list gets its position in `settings.order` (the date of the playlist does not change). The ids
+    that are not playlists of the user are ignored.
+    """
+    mine = {p.id for p in PlaylistTable.get_all()}
+
+    for position, playlist_id in enumerate(body.ids):
+        if playlist_id not in mine:
+            continue
+
+        playlist = PlaylistTable.get_by_id(playlist_id)
+
+        if playlist is None:
+            continue
+
+        PlaylistTable.update_settings(playlist_id, {**playlist.settings, "order": position})
+
+    return {"msg": "Done"}, 200
 
 
 class MoveTrackBody(BaseModel):
