@@ -13,6 +13,13 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.33.3 (2026-11-16)
+
+Correção pedida pelo Rodrigo: no celular, o primeiro toque num cartão de álbum ou de artista só o levantava e o segundo abria a página (e o artista, segundo o Rodrigo, nem abria).
+
+- **Hover dos cartões:** o levantar de 4 px (`card-lift`) agora só vale onde há hover de verdade (`@media (hover: hover) and (pointer: fine)`, ou seja, com mouse). Numa tela de toque o primeiro toque deixava o cartão em `:hover`, ele subia e (no iOS) o toque contava só como o hover, então era preciso tocar de novo; agora o primeiro toque já abre. Vale para artista, álbum e playlist. Com mouse, inclusive numa janela estreita do desktop, nada muda.
+- Conferido: o CSS compilado tem a regra de hover dentro do media query (`vite build` passa). No navegador de teste (a 412 px, com mouse) um clique no cartão do artista da Home abre a página do artista, então o "não abre" do artista não apareceu fora do toque; a causa que achei e corrigi é o hover que gruda no toque. **Não conferido:** o toque de verdade num celular (o navegador do teste tem mouse, então a regra fica ativa nele).
+
 ## 3.33.2 (2026-11-15)
 
 Ajuste pedido pelo Rodrigo: as faixas se arrastam em qualquer lugar da linha, nas playlists e principalmente na fila do PlayingPanel, e o texto e as imagens da fila não são selecionáveis.
