@@ -13,6 +13,15 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.33.7 (2026-11-16)
+
+Correção pedida pelo Rodrigo: depois da 3.33.6 as faixas ainda apareciam duplicadas na página de uma playlist, em volta da posição 50.
+
+- **Causa (cliente e servidor):** a página da playlist lê as faixas em páginas. O cliente pedia a próxima página a partir de `allTracks.length` (quantas faixas ele tinha na tela), mas o servidor conta posições da lista da playlist, que pode ter faixas que não estão mais na biblioteca (elas não vêm na página). Com N faixas escondidas, a página seguinte começava N posições cedo e trazia de novo as últimas faixas da anterior (a mesma faixa duas vezes, no fim de cada página). Não era a playlist gravada com a faixa repetida: o que o Rodrigo viu é só a lista da tela. (O que a 3.33.5 e a 3.33.6 trataram, as repetidas gravadas, também existia, mas não era essa a causa aqui.) Reproduzido com uma playlist simulada de 120 posições com uma faixa escondida a cada dez.
+- **Servidor:** `GET /playlists/<id>` responde também `next_start`: onde a próxima página começa, em posições da playlist (`start` mais o tanto de posições lidas, mesmo as que não são da biblioteca).
+- **Cliente:** o store da playlist guarda `nextStart` e pede a próxima página daí (e não de `allTracks.length`), e não adiciona uma faixa que já está na lista (rede de segurança). Remover uma faixa da lista recua o `nextStart` em 1; recarregar só o cabeçalho (depois de adicionar uma faixa) não o move. **Mais uma consequência:** a lista só carregava mais páginas quando a página tinha tantas faixas quanto o tamanho dela (`tracks.length >= track_limit`); com faixas escondidas a página vinha menor e a lista parava no meio, sem mostrar o resto. Agora carrega enquanto restam posições (`nextStart < count`).
+- Teste novo no servidor (`next_start` anda em posições, mesmo sem nenhuma faixa na biblioteca). Conferido no navegador com a playlist simulada (limite de 28 posições por página, 5 escondidas): 50 faixas carregadas, 50 únicas, `nextStart` em 55 (posições contíguas), e a lista continua a carregar ao rolar. ESLint dos arquivos mexidos e `vite build` passam. **Não conferido:** a playlist real do Rodrigo e a lista inteira carregando até o fim (o navegador de teste quase não gera quadros; conferi o começo).
+
 ## 3.33.6 (2026-11-16)
 
 Correção pedida pelo Rodrigo: uma playlist não pode ter a mesma faixa duas vezes, e não pode ser possível clicar na playlist que já tem a música (o ícone de check do menu).

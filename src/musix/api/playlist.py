@@ -275,9 +275,8 @@ def get_playlist(path: PlaylistIDPath, query: GetPlaylistQuery):
         # every track
         query.limit = len(playlist.trackhashes)
 
-    tracks = TrackStore.get_tracks_by_trackhashes(
-        playlist.trackhashes[query.start : query.start + query.limit]
-    )
+    page = playlist.trackhashes[query.start : query.start + query.limit]
+    tracks = TrackStore.get_tracks_by_trackhashes(page)
     duration = sum(t.duration for t in tracks)
     playlist._last_updated = date_string_to_time_passed(playlist.last_updated)
     playlist.duration = duration
@@ -287,6 +286,9 @@ def get_playlist(path: PlaylistIDPath, query: GetPlaylistQuery):
     return {
         "info": playlist,
         "tracks": serialize_tracks_with_plays(tracks) if not no_tracks else [],
+        # where the next page starts, in positions of the playlist: the playlist can have tracks that are not in the library
+        # (they do not come in `tracks`), so the client can not count the next start from the tracks it has
+        "next_start": query.start + len(page),
     }
 
 

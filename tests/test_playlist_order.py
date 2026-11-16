@@ -116,3 +116,15 @@ def test_the_old_repeated_tracks_are_taken_out(http):
     assert PlaylistTable.remove_duplicate_tracks() == 1
     assert PlaylistTable.get_trackhashes(pid) == ["a", "b", "c"]
     assert PlaylistTable.get_trackhashes(clean) == ["x", "y"]
+
+
+def test_the_next_page_starts_in_positions_of_the_playlist(http):
+    # none of the tracks is in the library (as the ones that were deleted): the pages have no tracks, but the next start moves
+    pid = add("paged", "2026-01-01 00:00:00")
+    add_tracks(http, pid, ["a", "b", "c", "d", "e"])
+
+    first = http.get(f"/playlists/{pid}?start=0&limit=2").json
+    second = http.get(f"/playlists/{pid}?start={first['next_start']}&limit=2").json
+    last = http.get(f"/playlists/{pid}?start={second['next_start']}&limit=2").json
+
+    assert [first["next_start"], second["next_start"], last["next_start"]] == [2, 4, 5]
