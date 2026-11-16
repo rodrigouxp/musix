@@ -13,6 +13,15 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.33.6 (2026-11-16)
+
+Correção pedida pelo Rodrigo: uma playlist não pode ter a mesma faixa duas vezes, e não pode ser possível clicar na playlist que já tem a música (o ícone de check do menu).
+
+- **Menu "Add to Playlist" (cliente):** a playlist que já tem a faixa (a que mostra o check) fica desabilitada: não tem ação, o clique não faz nada (nem fecha o submenu), o cursor é o normal e não há destaque ao passar o mouse (nova opção `disabled` nas opções de menu). Vale em todos os menus que usam essa lista (menu da faixa, botão de add da PlayerBar, do Now Playing).
+- **Servidor, a regra de verdade:** `POST /playlists/<id>/add` agora só aceita o que é novo. A checagem do que a playlist já tem e a gravação são um passo só (um `Lock`), então dois cliques ao mesmo tempo não adicionam a faixa duas vezes; se não há nada novo (a faixa, ou todas as de um álbum, pasta ou artista, já estão) a resposta é 409 ("já está na playlist"), como antes só acontecia com uma faixa. Antes a checagem era só para uma faixa e uma lista que trazia a mesma faixa duas vezes (um álbum ou uma pasta com a faixa repetida, "adicionar a fila") entrava repetida. `append_to_playlist` também tira os repetidos da própria lista que chega, e "Save as playlist" (`/save-item`) cria a playlist sem repetidas.
+- **Playlists que já têm faixa repetida (decisão minha, apaga):** na inicialização do servidor (`load_into_mem`, depois do reparo dos hashes, que pode juntar dois hashes em um) as faixas repetidas de todas as playlists são tiradas, ficando a primeira ocorrência de cada uma (`PlaylistTable.remove_duplicate_tracks`). É feito toda vez que o servidor sobe e não mexe em playlist sem repetidas. A ordem das demais faixas não muda.
+- Testes novos em `tests/test_playlist_order.py` (4: faixa que vem duas vezes entra uma vez, 409 sem mudar nada, só as novas entram e a limpeza das repetidas antigas). 76 testes de playlist, setup e home passam; ESLint dos arquivos mexidos e `vite build` passam (o ESLint reclama de duas barras escapadas em `context_menus/artist.ts`, que já estavam lá). No navegador (API simulada) o menu mostra as duas playlists com check como `disabled`, com cursor normal, e as outras normais. **Não conferido:** a limpeza rodando no servidor real, o clique no item desabilitado de verdade e as outras formas de adicionar (arrastar para a playlist, "adicionar a fila"), que só estão cobertas pela regra do servidor.
+
 ## 3.33.5 (2026-11-16)
 
 Correção pedida pelo Rodrigo: numa playlist apareciam lacunas (linhas vazias no meio da lista) e não dava para mover algumas faixas.

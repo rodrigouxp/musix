@@ -547,9 +547,9 @@ class PlaylistTable(Base):
     @classmethod
     def append_to_playlist(cls, id: int, trackhashes: list[str]):
         dbtrackhashes = cls.get_trackhashes(id) or []
-        # Preserve order: start with existing hashes, then add new ones that aren't already present
-        seen = set(dbtrackhashes)
-        trackhashes = dbtrackhashes + [h for h in trackhashes if h not in seen]
+        # Preserve order: start with existing hashes, then add new ones that aren't already present. A playlist never has
+        # the same track twice, so a hash that comes twice in ``trackhashes`` is added once too
+        trackhashes = list(dict.fromkeys(dbtrackhashes + trackhashes))
 
         return next(
             cls.execute(
@@ -559,6 +559,31 @@ class PlaylistTable(Base):
                 commit=True,
             )
         )
+
+    @classmethod
+    def remove_duplicate_tracks(cls) -> int:
+        """
+        Takes the repeated tracks out of every playlist (the first one stays). A playlist never has the same
+        track twice; the old ones could (a list that came with a track twice, or two hashes that became one when
+        the hashes were repaired). Gives how many playlists changed.
+        """
+        changed = 0
+
+        for playlist in list(cls.get_all(current_user=False)):
+            unique = list(dict.fromkeys(playlist.trackhashes))
+
+            if len(unique) == len(playlist.trackhashes):
+                continue
+
+            next(
+                cls.execute(
+                    update(cls).where(cls.id == playlist.id).values(trackhashes=unique),
+                    commit=True,
+                )
+            )
+            changed += 1
+
+        return changed
 
     @classmethod
     def get_trackhashes(cls, id: int):

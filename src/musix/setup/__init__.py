@@ -8,7 +8,7 @@ import uuid
 
 from musix.config import UserConfig
 from musix.lib.crypto import Cryptography
-from musix.db.userdata import UserTable
+from musix.db.userdata import PlaylistTable, UserTable
 from musix.lib.mapstuff import (
     map_album_colors,
     map_artist_colors,
@@ -77,6 +77,9 @@ def load_into_mem():
 
     # INFO: Re-key orphaned user data before mapping it
     map_trackhash_repairs()
+
+    # a playlist never has the same track twice (the repair above can make two hashes one)
+    PlaylistTable.remove_duplicate_tracks()
 
     map_scrobble_data()
     map_favorites()

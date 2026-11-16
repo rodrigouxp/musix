@@ -74,3 +74,45 @@ def test_playlists_of_other_users_are_ignored(http):
     theirs = [p for p in PlaylistTable.get_all(current_user=False) if p.id == other][0]
     assert "order" not in theirs.settings
     assert PlaylistTable.get_by_id(mine).settings["order"] == 1
+
+
+# ---- a playlist never has the same track twice ----
+
+
+def add_tracks(http, pid, hashes):
+    return http.post(f"/playlists/{pid}/add", json={"itemtype": "tracks", "itemhash": ",".join(hashes)})
+
+
+def test_a_track_that_comes_twice_is_added_once(http):
+    pid = add("dup", "2026-01-01 00:00:00")
+
+    assert add_tracks(http, pid, ["a", "b", "a"]).status_code == 200
+    assert PlaylistTable.get_trackhashes(pid) == ["a", "b"]
+
+
+def test_adding_what_the_playlist_has_is_a_409_and_changes_nothing(http):
+    pid = add("dup", "2026-01-01 00:00:00")
+    add_tracks(http, pid, ["a", "b"])
+
+    assert add_tracks(http, pid, ["a"]).status_code == 409
+    assert add_tracks(http, pid, ["b", "a"]).status_code == 409
+    assert PlaylistTable.get_trackhashes(pid) == ["a", "b"]
+
+
+def test_only_the_new_tracks_of_a_list_are_added(http):
+    pid = add("dup", "2026-01-01 00:00:00")
+    add_tracks(http, pid, ["a", "b"])
+
+    assert add_tracks(http, pid, ["b", "c", "c"]).status_code == 200
+    assert PlaylistTable.get_trackhashes(pid) == ["a", "b", "c"]
+
+
+def test_the_old_repeated_tracks_are_taken_out(http):
+    pid = add("old", "2026-01-01 00:00:00")
+    clean = add("clean", "2026-01-02 00:00:00")
+    PlaylistTable.update_one(pid, {"trackhashes": ["a", "b", "a", "c", "b"]})
+    PlaylistTable.update_one(clean, {"trackhashes": ["x", "y"]})
+
+    assert PlaylistTable.remove_duplicate_tracks() == 1
+    assert PlaylistTable.get_trackhashes(pid) == ["a", "b", "c"]
+    assert PlaylistTable.get_trackhashes(clean) == ["x", "y"]

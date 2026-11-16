@@ -4,6 +4,7 @@ All playlist-related routes.
 
 import dataclasses
 import json
+import threading
 from datetime import datetime
 import pathlib
 from typing import Any
@@ -30,6 +31,9 @@ from musix.serializers.track import serialize_tracks_with_plays
 from musix.store.tracks import TrackStore
 from musix.utils.dates import create_new_date, date_string_to_time_passed
 from musix.settings import Paths
+
+# adding to a playlist: the check of what it already has and the save are one step
+ADD_LOCK = threading.Lock()
 
 tag = Tag(name="Playlists", description="Get and manage playlists")
 api = APIBlueprint("playlists", __name__, url_prefix="/playlists", abp_tags=[tag])
@@ -205,10 +209,6 @@ def add_item_to_playlist(path: PlaylistIDPath, body: AddItemToPlaylistBody):
 
     if itemtype == "tracks":
         trackhashes = itemhash.split(",")
-        if len(trackhashes) == 1 and trackhashes[0] in PlaylistTable.get_trackhashes(
-            playlist_id
-        ):
-            return {"msg": "Track already exists in playlist"}, 409
     elif itemtype == "folder":
         trackhashes = get_path_trackhashes(
             itemhash,
@@ -222,7 +222,16 @@ def add_item_to_playlist(path: PlaylistIDPath, body: AddItemToPlaylistBody):
     else:
         trackhashes = []
 
-    PlaylistTable.append_to_playlist(playlist_id, trackhashes)
+    # the check and the save are one step: two clicks at the same time can not add the same track twice
+    with ADD_LOCK:
+        already = set(PlaylistTable.get_trackhashes(playlist_id) or [])
+
+        # a playlist never has the same track twice: what it has is not added again, and when there is nothing new it is a 409
+        if trackhashes and not any(h not in already for h in trackhashes):
+            return {"msg": "Track already exists in playlist"}, 409
+
+        PlaylistTable.append_to_playlist(playlist_id, trackhashes)
+
     return {"msg": "Done"}, 200
 
 
@@ -658,7 +667,7 @@ def save_item_as_playlist(body: SavePlaylistAsItemBody):
             )
 
     PlaylistTable.append_to_playlist(playlist.id, trackhashes)
-    playlist.count = len(trackhashes)
+    playlist.count = len(set(trackhashes))
 
     images = playlistlib.get_first_4_images(trackhashes=trackhashes)
     playlist.images = [img["image"] for img in images]
