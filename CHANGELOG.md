@@ -13,6 +13,13 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.33.1 (2026-11-15)
+
+Ajuste pedido pelo Rodrigo: os botões da fila do PlayingPanel ainda ficavam longe da borda.
+
+- **PlayingPanel:** a alça de arrastar (sem ícone, só uma área de toque que ocupava 16 px de layout) era o último item de cada linha e de cada cabeçalho de grupo, então o último ícone visível (a lixeira) ficava 16 px antes da borda. A alça passou para o começo do grupo de botões, e o último ícone termina a 9 px da borda do painel, como a capa na esquerda e a lixeira do título. As linhas terminam a 5 px da borda (a barra de rolagem de 4 px fica dentro do padding do painel e as linhas têm 4 px de padding por dentro); o `scrollbar-gutter: stable` de antes segue. O arrastar pela alça funciona igual (só mudou de lugar). A aba Queue do celular usa a mesma lista e ganha a mesma posição.
+- Conferido no navegador: a lixeira da linha e do cabeçalho do grupo, a capa e a lixeira do título, todos a 9 px da borda. **Não conferido:** o arrastar da alça depois da mudança (só o layout) e a aba Queue do celular.
+
 ## 3.33.0 (2026-11-15)
 
 Ajustes de toque pedidos pelo Rodrigo (menu da faixa só nos três pontos e arrastar com o dedo parado, tocar fora do drawer para fechar), a ordem das playlists que se arrasta no SidePanel e na página de Playlists (e é salva no servidor), o cartão de playlist sem o botão de play e com "Play" no menu, o hover novo dos cartões, a Home do celular com os cartões do desktop e ajustes no PlayingPanel e no Now Playing.
