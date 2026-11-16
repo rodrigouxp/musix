@@ -13,6 +13,13 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.33.4 (2026-11-16)
+
+Ajuste pedido pelo Rodrigo: o número de plays que aparece ao passar o mouse na linha da faixa era laranja nas playlists e cinza (outro estilo) nas páginas de álbum e de artista.
+
+- **Plays no hover da faixa:** em todas as listas de faixas é igual: neutral-300 (token `--artist-track-plays-color`), estilo `action-button-14px` (14px/700) e em maiúsculas ("14 PLAYS", "UNPLAYED"). Antes: laranja de 16 px nas playlists (`TrackDuration.vue`) e `paragraph-14px` sem maiúsculas nas linhas dos painéis (`Global/panels.scss`).
+- Conferido no navegador: o estilo computado do texto numa linha de playlist e numa linha de álbum (`rgb(112, 112, 112)`, 14px, 700, `uppercase`), com um elemento de teste, porque o mock não manda a contagem de plays. **Não conferido:** o texto real aparecendo no hover.
+
 ## 3.33.3 (2026-11-16)
 
 Correção pedida pelo Rodrigo: no celular, o primeiro toque num cartão de álbum ou de artista só o levantava e o segundo abria a página (e o artista, segundo o Rodrigo, nem abria).
