@@ -13,6 +13,16 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.33.2 (2026-11-15)
+
+Ajuste pedido pelo Rodrigo: as faixas se arrastam em qualquer lugar da linha, nas playlists e principalmente na fila do PlayingPanel, e o texto e as imagens da fila não são selecionáveis.
+
+- **PlayingPanel (fila):** a linha inteira da faixa, e o cabeçalho inteiro de um grupo (álbum ou playlist), é a alça do arrasto. Com o mouse o arrasto começa quando o ponteiro se move uns 6 px com o botão apertado (um clique simples na linha ainda toca a faixa); com o dedo, depois de segurar 350 ms (antes disso a lista rola). Saíram as alças invisíveis (`qt-drag` e `qg-drag`) e a chave `PlayingPanel.Move` do idioma. O texto e a capa das linhas e dos cabeçalhos não são selecionáveis nem arrastáveis como imagem (`user-select: none`, `draggable="false"`, `-webkit-touch-callout: none`).
+- **Playlists:** a linha inteira da faixa também é a alça. Com o mouse, apertar nos nomes de artista e de álbum (links) ou no coração e nos três pontos continua sendo um clique e não arrasta; com o dedo segurar em qualquer lugar arrasta (como na 3.33.0). O arrasto nativo de link e de imagem foi desligado nas linhas.
+- **Decisão minha:** na fila, o toque longo que o Android usava para abrir o menu da faixa virou arrasto; segurar e soltar sem mover abre o menu da faixa (mesmo padrão dos cartões de playlist da 3.33.0). O clique que termina um arrasto é descartado nas duas listas.
+- **Now Playing (celular, aba Queue):** um arrasto de linha não puxa mais o drawer junto (o gesto de descer do drawer olha uma marca que o arrasto de linha põe no `body`).
+- Conferido no navegador (API simulada): arrastar com o mouse pelo meio de uma linha da fila e de uma linha de playlist (linha de destino, ghost e nova ordem; um movimento de 1 px não arrasta), segurar com o dedo e arrastar na fila, segurar e soltar sem mover chamando o menu, apertar num nome de artista sem arrastar, e as alças antigas removidas. ESLint e `vite build` passam. **Não conferido:** toque de verdade num celular (só eventos de ponteiro simulados), a rolagem automática, o arrasto de um grupo inteiro pelo cabeçalho e o menu da faixa abrindo de verdade a partir do toque longo (no teste o mock não tem os artistas da faixa e o menu falhou por isso; a chamada foi feita).
+
 ## 3.33.1 (2026-11-15)
 
 Ajuste pedido pelo Rodrigo: os botões da fila do PlayingPanel ainda ficavam longe da borda.
