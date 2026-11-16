@@ -13,6 +13,14 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.33.5 (2026-11-16)
+
+Correção pedida pelo Rodrigo: numa playlist apareciam lacunas (linhas vazias no meio da lista) e não dava para mover algumas faixas.
+
+- **Causa:** o rolador virtual da página da playlist (`PlaylistView`) identificava cada linha pelo arquivo da faixa. Uma playlist pode ter a mesma faixa mais de uma vez (o mesmo arquivo), e com o mesmo identificador em duas linhas o rolador desenhava só uma delas e deixava a outra em branco. Reproduzido com uma playlist de 17 faixas e 3 repetidas: só 12 linhas apareciam. O identificador agora é o arquivo mais quantas vezes ele já apareceu antes na lista, então as linhas repetidas aparecem todas. Isso não é novo da 3.33 (o identificador era o mesmo antes), mas o arrastar da linha inteira da 3.33.2 tornou o problema mais fácil de ver.
+- **Mover uma faixa repetida (muda o servidor):** o servidor movia sempre a primeira ocorrência de uma faixa que aparece mais de uma vez, então, depois de recarregar, a ordem podia ser outra da que o Rodrigo viu. `POST /playlists/<id>/move-track` aceita `occurrence` (qual das repetidas move; 0 é a primeira) e `after_occurrence` (qual das repetidas é a âncora de `after_trackhash`, contada na lista sem a faixa que move), com 0 por padrão, então quem não manda continua igual. O cliente manda as duas. Testes novos em `tests/test_playlist_reorder.py` (3: mover a segunda ocorrência, ancorar numa repetida e ocorrência que não existe é 404).
+- Conferido: no navegador, com uma playlist simulada de 17 faixas com 3 repetidas, antes só 12 linhas eram desenhadas e agora aparecem as 17 (índices contíguos); arrastar uma faixa repetida manda `occurrence: 1` ao servidor. Testes do servidor de playlists (48) passam; ESLint e `vite build` passam. **Não conferido:** a playlist real do Rodrigo (não sei se as lacunas dela são só faixas repetidas; se ainda houver linha em branco sem repetição, preciso de uma lista que a reproduza).
+
 ## 3.33.4 (2026-11-16)
 
 Ajuste pedido pelo Rodrigo: o número de plays que aparece ao passar o mouse na linha da faixa era laranja nas playlists e cinza (outro estilo) nas páginas de álbum e de artista.

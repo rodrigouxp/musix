@@ -470,6 +470,22 @@ class ScrobbleTable(Base):
             return tracklog_to_dataclass(res)
 
 
+def nth_index(items: list[str], item: str, occurrence: int = 0) -> int | None:
+    """The position of the ``occurrence``th (0 is the first) time ``item`` is in the list, or None."""
+    seen = 0
+
+    for index, value in enumerate(items):
+        if value != item:
+            continue
+
+        if seen == occurrence:
+            return index
+
+        seen += 1
+
+    return None
+
+
 class PlaylistTable(Base):
     __tablename__ = "playlist"
 
@@ -572,14 +588,17 @@ class PlaylistTable(Base):
             )
 
     @classmethod
-    def move_track(cls, id: int, trackhash: str, to_index: int):
+    def move_track(cls, id: int, trackhash: str, to_index: int, occurrence: int = 0):
         """
         Moves a track to another position of the playlist. The playlist and the
         track must exist and ``to_index`` must be a position of the list (the
         endpoint checks it). Nothing else of the playlist is changed.
+
+        A playlist can have the same track more than once: ``occurrence`` says which
+        one moves (0 is the first of them in the list).
         """
         dbtrackhashes = cls.get_trackhashes(id)
-        current = dbtrackhashes.index(trackhash)
+        current = nth_index(dbtrackhashes, trackhash, occurrence)
 
         if current == to_index:
             return dbtrackhashes

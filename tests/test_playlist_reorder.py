@@ -176,3 +176,61 @@ def test_limit_minus_one_gives_every_track(http, pid, monkeypatch):
     res = http.get(f"/playlists/{pid}?limit=-1")
 
     assert [t["trackhash"] for t in res.json["tracks"]] == HASHES
+
+
+def test_a_repeated_track_moves_the_occurrence_that_was_asked(http):
+    PlaylistTable.insert_one(
+        {
+            "name": "Twice",
+            "last_updated": "2026-01-01 00:00:00",
+            "userid": 1,
+            "settings": {},
+            "trackhashes": ["a", "b", "c", "a", "d"],
+        }
+    )
+    twice = [p.id for p in PlaylistTable.get_all() if p.name == "Twice"][0]
+
+    # the second "a" goes right after "b": the first one stays where it is
+    res = http.post(
+        f"/playlists/{twice}/move-track", json={"trackhash": "a", "occurrence": 1, "after_trackhash": "b"}
+    )
+
+    assert res.status_code == 200
+    assert order(twice) == ["a", "b", "a", "c", "d"]
+
+
+def test_the_track_to_go_after_can_be_a_repeated_one(http):
+    PlaylistTable.insert_one(
+        {
+            "name": "Twice",
+            "last_updated": "2026-01-01 00:00:00",
+            "userid": 1,
+            "settings": {},
+            "trackhashes": ["a", "b", "a", "c"],
+        }
+    )
+    twice = [p.id for p in PlaylistTable.get_all() if p.name == "Twice"][0]
+
+    # "c" goes right after the second "a" (the list without "c" is a, b, a)
+    res = http.post(
+        f"/playlists/{twice}/move-track",
+        json={"trackhash": "c", "after_trackhash": "a", "after_occurrence": 1},
+    )
+
+    assert res.status_code == 200
+    assert order(twice) == ["a", "b", "a", "c"]
+
+    # and after the first one: a, c, b, a
+    res = http.post(
+        f"/playlists/{twice}/move-track",
+        json={"trackhash": "c", "after_trackhash": "a", "after_occurrence": 0},
+    )
+
+    assert res.status_code == 200
+    assert order(twice) == ["a", "c", "b", "a"]
+
+
+def test_an_occurrence_that_does_not_exist_is_a_404(http, pid):
+    res = http.post(f"/playlists/{pid}/move-track", json={"trackhash": "a", "occurrence": 1, "to_index": 0})
+
+    assert res.status_code == 404

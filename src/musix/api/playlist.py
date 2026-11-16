@@ -17,7 +17,7 @@ from flask_openapi3 import APIBlueprint, FileStorage as _FileStorage
 
 from musix import models
 from musix.api.apischemas import GenericLimitSchema
-from musix.db.userdata import PlaylistTable
+from musix.db.userdata import PlaylistTable, nth_index
 from musix.lib import playlistlib
 from musix.lib.albumslib import sort_by_track_no
 from musix.lib.home.recentlyadded import get_recently_added_playlist
@@ -472,6 +472,17 @@ class MoveTrackBody(BaseModel):
         "playlist has tracks that are not in the library anymore (the client does not see them, so "
         "its positions are not the ones of the list)",
     )
+    occurrence: int = Field(
+        0,
+        ge=0,
+        description="A playlist can have the same track more than once: which one of them moves "
+        "(0 is the first of them in the list)",
+    )
+    after_occurrence: int = Field(
+        0,
+        ge=0,
+        description="The same for after_trackhash, counted in the list without the track that moves",
+    )
 
 
 @api.post("/<playlistid>/move-track")
@@ -488,18 +499,23 @@ def move_track_in_playlist(path: PlaylistIDPath, body: MoveTrackBody):
     if trackhashes is None:
         return {"error": "Playlist not found"}, 404
 
-    if body.trackhash not in trackhashes:
+    current = nth_index(trackhashes, body.trackhash, body.occurrence)
+
+    if current is None:
         return {"error": "The track is not in the playlist"}, 404
 
     if body.after_trackhash is not None:
-        others = [h for h in trackhashes if h != body.trackhash]
+        # the list without the track that moves: the one to go after is looked up there
+        others = trackhashes[:current] + trackhashes[current + 1 :]
+        anchor = nth_index(others, body.after_trackhash, body.after_occurrence)
 
-        if body.after_trackhash == body.trackhash:
-            to_index = trackhashes.index(body.trackhash)
-        elif body.after_trackhash not in others:
-            return {"error": "The track to go after is not in the playlist"}, 404
+        if anchor is not None:
+            to_index = anchor + 1
+        elif body.after_trackhash == body.trackhash:
+            # right after itself: it stays
+            to_index = current
         else:
-            to_index = others.index(body.after_trackhash) + 1
+            return {"error": "The track to go after is not in the playlist"}, 404
     elif body.to_index is not None:
         to_index = body.to_index
     else:
@@ -509,8 +525,8 @@ def move_track_in_playlist(path: PlaylistIDPath, body: MoveTrackBody):
         return {"error": "to_index is outside of the playlist"}, 400
 
     # the same position: nothing to save
-    if trackhashes.index(body.trackhash) != to_index:
-        PlaylistTable.move_track(playlist_id, body.trackhash, to_index)
+    if current != to_index:
+        PlaylistTable.move_track(playlist_id, body.trackhash, to_index, body.occurrence)
 
     return {"msg": "Done"}, 200
 
