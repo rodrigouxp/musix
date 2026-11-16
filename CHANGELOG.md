@@ -13,6 +13,14 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.34.0 (2026-11-16)
+
+Os cartões de faixa com o efeito de hover, e a PlayerBar abrindo o NowPlaying do celular em janelas com menos de 1000px (pedidos do Rodrigo).
+
+- **PlayerBar abre o NowPlaying do celular abaixo de 1000px:** a capa da PlayerBar (que abria e fechava o PlayingPanel) agora faz um `push` para `/nowplaying/home`, o drawer do celular com as abas Home, Lyrics e Queue, quando a janela tem menos de 1000px (de 601 a 999, a PlayerBar em uma ou duas linhas). O PlayingPanel não aparece nessa faixa de largura, mesmo que estivesse aberto (nova variável `isCompactWindow` e getter `playing_panel_open` nas configurações; o estado "aberto" que o usuário escolheu continua guardado e volta quando a janela passa de 1000px). A rota `/nowplaying/:tab` aceita as três abas até 999px (antes, acima de 600px só a de letras, e as outras iam para a Home) e a página mostra o drawer; se a janela passa de 1000px com o drawer aberto, as abas Home e Queue voltam para a Home e a de letras segue como página. O botão de letras da PlayerBar também abre a aba Lyrics do drawer nessa faixa. A capa tem o rótulo "Open Now Playing" (novo texto) e não tem mais `aria-expanded` nessa faixa. **Decisão minha:** o drawer ocupa a largura da janela (4 px de cada lado), também entre 601 e 999px, sem largura máxima.
+- **Cartões de faixa:** o `TrackThumb` (Recently played da Home) e o `TrackCard` (as linhas de cartões de busca e favoritos) sobem 4 px com `ease-in-out` de 200 ms ao passar o mouse, como os de artista, álbum e playlist (mixin `card-lift`, só com mouse, como na 3.33.3). No `TrackCard` o fundo que clareava ao passar o mouse saiu; o botão de play que aparece nele continua.
+- Conferido no navegador (API simulada): a 950px, com o PlayingPanel marcado como aberto, a capa leva a `#/nowplaying/home` com o drawer e as duas abas (Lyrics e Queue), o painel não aparece e a grade não abre a coluna; a 1100px a capa continua abrindo e fechando o PlayingPanel. O CSS compilado tem a regra de levantar dentro do media query para `track-thumb` e `trackcard`. ESLint e `vite build` passam. **Não conferido:** o cartão de faixa subindo na tela, a aba Lyrics e o botão de letras a 601-999px, e a janela passando de 1000px com o drawer aberto.
+
 ## 3.33.7 (2026-11-16)
 
 Correção pedida pelo Rodrigo: depois da 3.33.6 as faixas ainda apareciam duplicadas na página de uma playlist, em volta da posição 50.
