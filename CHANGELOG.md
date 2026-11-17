@@ -13,6 +13,16 @@ Formato MAIOR.MENOR.CORREÇÃO, lido de `version.txt`:
 - **MAIOR** só em mudança grande ou incompatível (formato do banco, quebra de API, migração manual) ou ao acompanhar um MAIOR do upstream. Quem decide é o Rodrigo.
 - **Toda entrega publicada sobe a versão**, uma por prompt, na ordem em que é publicada (o app mostra a versão que está rodando).
 
+## 3.34.1 (2026-11-17)
+
+Ajuste pedido pelo Rodrigo: a capa do Now Playing (celular e tablet) saía em baixa qualidade, enquanto a mesma capa ampliada na página do álbum saía nítida.
+
+- **Causa:** o Now Playing (`NowPlayingHome.vue`) usava a miniatura `large` (512 px), e a capa ampliada do álbum usa a `original` (até 1200 px). Numa capa que ocupa a largura da tela (e num tablet, de 600 a 900 px e mais com a tela de alta densidade) os 512 px ficam esticados e moles.
+- **Cliente:** a capa do Now Playing usa a miniatura `original` (a mesma da capa ampliada da página do álbum). O resto do app segue com as miniaturas pequenas (listas, cartões), que são as que cabem no tamanho em que aparecem.
+- **Servidor:** `GET /img/thumbnail/original/<arquivo>` devolve a miniatura `large` quando a capa não tem arquivo `original` (capas salvas antes de existir esse tamanho), em vez da imagem padrão. Dois testes novos em `tests/test_thumbnail_original.py`.
+- **O que "original" é:** não é o arquivo da capa como veio da música ou da pasta (que pode ter 3000 px ou mais): o servidor guarda a capa em webp com no máximo 1200 px (`OG_THUMB_SIZE`; se a capa tem menos que isso, fica como é). É o maior tamanho que o app tem hoje, o mesmo da capa ampliada na página do álbum.
+- Conferido: ESLint, `vite build` e os testes do servidor. **Não conferido:** a nitidez no tablet e no celular de verdade, e o tempo de carga numa rede lenta.
+
 ## 3.34.0 (2026-11-16)
 
 Os cartões de faixa com o efeito de hover, e a PlayerBar abrindo o NowPlaying do celular em janelas com menos de 1000px (pedidos do Rodrigo).

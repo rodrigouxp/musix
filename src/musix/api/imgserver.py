@@ -173,13 +173,22 @@ def send_thumbnail(path: ImagePath, query: ImageQuery):
     """
     Get thumbnail image
 
-    Size options: large (500x500), xsmall (64px), small (96px), medium (256px)
+    Size options: large (512px), xsmall (64px), small (96px), medium (256px), original (up to 1200px; the large one when the cover has none)
     """
     size = path.size
     if size not in _THUMBNAIL_FOLDERS:
         size = "large"
 
     folder = _THUMBNAIL_FOLDERS[size]()
+
+    # a cover saved before the original size existed has no file there (and the answer would be the default image): the
+    # large one is the best it has
+    if size == "original" and not (Path(folder) / path.imgpath).exists():
+        large = Paths().lg_thumb_path
+
+        if (Path(large) / path.imgpath).exists():
+            folder = large
+
     return no_cache(
         send_file_or_fallback(str(folder), path.imgpath, pathhash=query.pathhash)
     )
